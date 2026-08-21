@@ -1,9 +1,10 @@
 from typing import List
-from fastapi import FastAPI, Depends, File, UploadFile
+from fastapi import FastAPI, Depends, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from config import get_settings, Settings
 from services.dataset_service import process_and_save_csv
+from services.sql_generator import generate_sql_from_question, SQLGenerationResult
 from db import get_dataset_full_schema
 
 settings = get_settings()
@@ -44,6 +45,19 @@ class DatasetSchemaResponse(BaseModel):
     columns: List[ColumnSchema]
 
 
+class QueryRequest(BaseModel):
+    dataset_id: str
+    question: str
+
+
+class QueryResponse(BaseModel):
+    dataset_id: str
+    question: str
+    sql: str
+    explanation: str
+    chart_type: str
+
+
 @app.get("/")
 def read_root(config: Settings = Depends(get_settings)):
     return {
@@ -80,3 +94,26 @@ def get_dataset_schema_endpoint(dataset_id: str):
     Retrieve the DuckDB schema and metadata for an ingested dataset.
     """
     return get_dataset_full_schema(dataset_id)
+
+
+@app.post("/api/query", response_model=QueryResponse)
+def analyze_dataset_query(payload: QueryRequest):
+    """
+    Translates a natural language question into schema-aware SQL, explanation, and chart recommendation.
+    """
+    schema_info = get_dataset_full_schema(payload.dataset_id)
+    result: SQLGenerationResult = generate_sql_from_question(payload.question, schema_info)
+    
+    if not result.success:
+        raise HTTPException(
+            status_code=400,
+            detail=result.error_message or "Failed to generate SQL for the provided question.",
+        )
+
+    return QueryResponse(
+        dataset_id=payload.dataset_id,
+        question=payload.question,
+        sql=result.sql,
+        explanation=result.explanation,
+        chart_type=result.chart_type,
+    )

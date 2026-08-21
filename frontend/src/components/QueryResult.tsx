@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import ChartVisualization from "@/components/ChartVisualization";
 
 interface QueryResultsPayload {
   columns: string[];
@@ -16,6 +17,8 @@ interface QueryResponse {
   explanation: string;
   attempts: number;
   results: QueryResultsPayload;
+  chart?: { type: string };
+  chart_type?: string;
   success: boolean;
   error_message?: string | null;
 }
@@ -239,6 +242,9 @@ export default function QueryResult({ result }: QueryResultProps) {
             </pre>
           </div>
         )}
+
+        {/* Chart Visualization */}
+        <ChartVisualization result={result} />
 
         {/* Results Table */}
         {results && results.columns && results.columns.length > 0 && (

@@ -4,10 +4,16 @@ import { useState } from "react";
 import DatasetUpload from "@/components/DatasetUpload";
 import DatasetSchema from "@/components/DatasetSchema";
 import QueryInput from "@/components/QueryInput";
+import QueryResult from "@/components/QueryResult";
 
 export default function Home() {
   const [activeDatasetId, setActiveDatasetId] = useState<string | null>(null);
   const [queryResult, setQueryResult] = useState<any>(null);
+
+  const handleUploadSuccess = (id: string) => {
+    setActiveDatasetId(id);
+    setQueryResult(null); // Clear previous results on new dataset upload
+  };
 
   return (
     <div
@@ -110,11 +116,12 @@ export default function Home() {
         >
           {/* Left Column: Upload & Query Input */}
           <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            <DatasetUpload onUploadSuccess={(id) => setActiveDatasetId(id)} />
+            <DatasetUpload onUploadSuccess={handleUploadSuccess} />
             <QueryInput
               datasetId={activeDatasetId}
               onQuerySuccess={(result) => setQueryResult(result)}
             />
+            {queryResult && <QueryResult result={queryResult} />}
           </div>
 
           {/* Right Column: Schema Section */}

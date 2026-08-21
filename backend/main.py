@@ -4,8 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from config import get_settings, Settings
 from services.dataset_service import process_and_save_csv
-from services.sql_generator import generate_sql_from_question, SQLGenerationResult
-from services.query_executor import execute_query, SQLExecutionResult
+from services.query_pipeline import run_query_pipeline, QueryPipelineResult, QueryResultsSchema
 from db import get_dataset_full_schema
 
 settings = get_settings()
@@ -51,19 +50,13 @@ class QueryRequest(BaseModel):
     question: str
 
 
-class QueryResultsSchema(BaseModel):
-    columns: List[str]
-    rows: List[List[Any]]
-    row_count: int
-    execution_time_ms: float
-
-
 class QueryResponse(BaseModel):
     dataset_id: str
     question: str
     sql: str
     explanation: str
     chart_type: str
+    attempts: int
     results: QueryResultsSchema
 
 
@@ -108,41 +101,26 @@ def get_dataset_schema_endpoint(dataset_id: str):
 @app.post("/api/query", response_model=QueryResponse)
 def analyze_dataset_query(payload: QueryRequest):
     """
-    Translates a natural language question into schema-aware SQL, validates it,
-    executes it against DuckDB, and returns SQL, explanation, chart recommendation, and execution results.
+    Translates a natural language question into SQL, validates, executes against DuckDB,
+    and automatically self-corrects on database errors up to 3 attempts.
     """
-    schema_info = get_dataset_full_schema(payload.dataset_id)
-    
-    # 1. Translate NL Question -> Schema-Aware SQL
-    gen_result: SQLGenerationResult = generate_sql_from_question(payload.question, schema_info)
-    if not gen_result.success:
-        raise HTTPException(
-            status_code=400,
-            detail=gen_result.error_message or "Failed to generate SQL for the provided question.",
-        )
-
-    # 2. Validate & Execute SQL against DuckDB
-    exec_result: SQLExecutionResult = execute_query(
+    pipeline_res: QueryPipelineResult = run_query_pipeline(
         dataset_id=payload.dataset_id,
-        sql=gen_result.sql,
-        schema_info=schema_info,
+        question=payload.question,
     )
-    if not exec_result.success:
+    
+    if not pipeline_res.success or not pipeline_res.results:
         raise HTTPException(
             status_code=400,
-            detail=exec_result.error_message or "Failed to execute generated SQL against dataset.",
+            detail=pipeline_res.error_message or "Failed to generate and execute SQL for the provided question.",
         )
 
     return QueryResponse(
-        dataset_id=payload.dataset_id,
-        question=payload.question,
-        sql=gen_result.sql,
-        explanation=gen_result.explanation,
-        chart_type=gen_result.chart_type,
-        results=QueryResultsSchema(
-            columns=exec_result.columns,
-            rows=exec_result.rows,
-            row_count=exec_result.row_count,
-            execution_time_ms=exec_result.execution_time_ms,
-        ),
+        dataset_id=pipeline_res.dataset_id,
+        question=pipeline_res.question,
+        sql=pipeline_res.sql,
+        explanation=pipeline_res.explanation,
+        chart_type=pipeline_res.chart_type,
+        attempts=pipeline_res.attempts,
+        results=pipeline_res.results,
     )

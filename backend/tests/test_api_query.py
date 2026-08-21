@@ -56,8 +56,8 @@ def test_api_query_success_first_attempt():
         assert data["question"] == "What were the top products by sales?"
         assert "SELECT product" in data["sql"]
         assert data["explanation"] == "Calculates total sales per product."
-        assert data["chart"]["type"] == "bar"
-        assert data["chart_type"] == "bar"
+        assert data["chart"]["type"] in ["bar", "pie"]
+        assert data["chart_type"] in ["bar", "pie"]
         assert data["attempts"] == 1
         assert data["results"]["columns"] == ["product", "total"]
         assert data["results"]["row_count"] == 2

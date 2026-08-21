@@ -7,6 +7,7 @@ from services.sql_generator import generate_sql_from_question, SQLGenerationResu
 from services.sql_validator import validate_sql_query
 from services.query_executor import execute_query, SQLExecutionResult
 from services.sql_corrector import generate_corrected_sql
+from services.chart_selector import select_visualization
 
 logger = logging.getLogger("querypilot.query_pipeline")
 
@@ -150,12 +151,17 @@ def run_query_pipeline(
 
         if exec_res.success:
             logger.info(f"Query Pipeline succeeded on attempt {attempt}/{max_attempts}")
+            deterministic_chart_type = select_visualization(
+                columns=exec_res.columns,
+                rows=exec_res.rows,
+                row_count=exec_res.row_count,
+            )
             return QueryPipelineResult(
                 dataset_id=dataset_id,
                 question=question,
                 sql=current_sql,
                 explanation=current_explanation,
-                chart_type=current_chart_type,
+                chart_type=deterministic_chart_type,
                 results=QueryResultsSchema(
                     columns=exec_res.columns,
                     rows=exec_res.rows,

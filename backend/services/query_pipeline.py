@@ -94,8 +94,8 @@ def run_query_pipeline(
     for attempt in range(1, max_attempts + 1):
         logger.info(f"Query Pipeline Execution Attempt {attempt}/{max_attempts} for dataset '{dataset_id}'")
 
-        # 1. SQL Generation (Attempt 1: sql_generator, Attempt 2..N: sql_corrector)
-        if attempt == 1:
+        # 1. SQL Generation (Attempt 1 or if no SQL generated yet: sql_generator, otherwise: sql_corrector)
+        if attempt == 1 or not current_sql:
             gen_res: SQLGenerationResult = generate_sql_from_question(
                 question=question,
                 schema_info=schema_info,
@@ -155,6 +155,7 @@ def run_query_pipeline(
                 columns=exec_res.columns,
                 rows=exec_res.rows,
                 row_count=exec_res.row_count,
+                question=question,
             )
             return QueryPipelineResult(
                 dataset_id=dataset_id,

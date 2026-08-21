@@ -18,6 +18,7 @@ DATE_PATTERNS = [
 ]
 
 DATE_KEYWORDS = {"date", "time", "year", "month", "day", "timestamp", "quarter"}
+RANKING_KEYWORDS = {"top", "highest", "lowest", "most", "least", "best", "worst", "rank", "ranking", "order by"}
 
 
 def _infer_value_type(val: Any, col_name: str) -> ColumnType:
@@ -102,7 +103,12 @@ def infer_column_types(columns: List[str], rows: List[List[Any]]) -> List[Column
     return col_types
 
 
-def select_visualization(columns: List[str], rows: List[List[Any]], row_count: int) -> str:
+def select_visualization(
+    columns: List[str],
+    rows: List[List[Any]],
+    row_count: int,
+    question: str = "",
+) -> str:
     """
     Deterministic rule-based visualization selector.
     Returns one of: 'bar', 'line', 'scatter', 'pie', 'kpi', 'table'
@@ -113,6 +119,7 @@ def select_visualization(columns: List[str], rows: List[List[Any]], row_count: i
     3. For 2-column results:
        - 'line' if 1 DATE column and 1 NUMERIC column
        - 'scatter' if 2 NUMERIC columns
+       - 'bar' if question contains ranking/comparison keywords ('top', 'highest', etc.)
        - 'pie' if 1 CATEGORICAL + 1 NUMERIC with 1 < row_count <= 6
        - 'bar' if 1 CATEGORICAL + 1 NUMERIC with row_count > 6
     4. For 3+ column results:
@@ -142,10 +149,18 @@ def select_visualization(columns: List[str], rows: List[List[Any]], row_count: i
             return "scatter"
         # Category + Numeric variable
         if (len(cat_indices) >= 1 or len(date_indices) >= 1) and len(numeric_indices) >= 1:
+            q_lower = (question or "").lower()
+            if any(kw in q_lower for kw in RANKING_KEYWORDS):
+                return "bar"
+
             if 1 < row_count <= 6:
                 return "pie"
             else:
                 return "bar"
 
-    # Rule 3: 3+ columns fallback -> table
+    # Rule 3: 3-column results with 2 Numeric + 1 Categorical (e.g. Product, Quantity, Sales) -> scatter
+    if num_cols == 3 and len(numeric_indices) == 2:
+        return "scatter"
+
+    # Rule 4: 3+ columns default fallback -> table
     return "table"

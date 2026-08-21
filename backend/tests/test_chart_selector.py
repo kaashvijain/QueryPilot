@@ -60,6 +60,18 @@ def test_chart_selector_bar():
     assert chart_type == "bar"
 
 
+def test_chart_selector_bar_ranking_keyword():
+    """Ranking questions ('top products', 'highest sales') select bar chart even for <= 6 rows."""
+    columns = ["Product", "Total_Revenue"]
+    rows = [
+        ["Laptop", 2400.0],
+        ["Monitor", 1800.0],
+        ["Desk", 1200.0],
+    ]
+    chart_type = select_visualization(columns, rows, row_count=3, question="what are top products by revenue?")
+    assert chart_type == "bar"
+
+
 def test_chart_selector_table_zero_rows():
     """Zero rows -> table."""
     columns = ["product", "revenue"]

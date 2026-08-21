@@ -9,6 +9,9 @@ import {
   Line,
   PieChart,
   Pie,
+  ScatterChart,
+  Scatter,
+  ZAxis,
   Cell,
   XAxis,
   YAxis,
@@ -254,6 +257,61 @@ export default function ChartVisualization({ result }: ChartVisualizationProps) 
                 ))}
               </Pie>
             </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  }
+
+  // Scatter Plot View
+  if (chartType === "scatter") {
+    const xCol = columns.length >= 3 ? columns[1] : columns[0];
+    const yCol = columns.length >= 3 ? columns[2] : columns[1];
+    const labelCol = columns.length >= 3 ? columns[0] : "";
+
+    return (
+      <div style={{ marginBottom: "1.5rem" }}>
+        <div
+          style={{
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            color: "#64748b",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            marginBottom: "0.75rem",
+          }}
+        >
+          Scatter Comparison Plot ({xCol} vs {yCol})
+        </div>
+        <div
+          style={{
+            width: "100%",
+            height: 300,
+            backgroundColor: "#ffffff",
+            borderRadius: "8px",
+            border: "1px solid #e2e8f0",
+            padding: "1rem 0",
+          }}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <ScatterChart margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey={xCol} stroke="#64748b" fontSize={12} tickLine={false} name={xCol} />
+              <YAxis dataKey={yCol} stroke="#64748b" fontSize={12} tickLine={false} name={yCol} />
+              {labelCol && <ZAxis dataKey={labelCol} name={labelCol} />}
+              <Tooltip
+                cursor={{ strokeDasharray: "3 3" }}
+                contentStyle={{
+                  backgroundColor: "#0f172a",
+                  borderRadius: "6px",
+                  border: "none",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                }}
+                itemStyle={{ color: "#38bdf8" }}
+              />
+              <Scatter name="Data Points" data={chartData} fill="#2563eb" />
+            </ScatterChart>
           </ResponsiveContainer>
         </div>
       </div>

@@ -70,3 +70,16 @@ def test_upload_empty_csv():
     response = client.post("/api/dataset", files=files)
     assert response.status_code == 400
     assert "empty" in response.json()["detail"].lower()
+
+
+def test_upload_file_exceeds_size_limit(monkeypatch):
+    """Test uploading a file exceeding max size limit returns HTTP 413 Payload Too Large."""
+    monkeypatch.setattr("services.dataset_service.MAX_FILE_SIZE_BYTES", 50)
+    large_content = "column1,column2\n" + ("x" * 100)
+    files = {
+        "file": ("large.csv", large_content, "text/csv")
+    }
+
+    response = client.post("/api/dataset", files=files)
+    assert response.status_code == 413
+    assert "exceeds" in response.json()["detail"].lower()

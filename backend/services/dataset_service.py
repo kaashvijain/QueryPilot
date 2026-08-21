@@ -6,6 +6,7 @@ from fastapi import HTTPException, UploadFile
 from db import ingest_csv_to_duckdb
 
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
+MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB limit
 
 
 def ensure_upload_dir() -> str:
@@ -22,7 +23,7 @@ async def process_and_save_csv(file: UploadFile) -> dict:
         dict containing dataset_id, filename, row_count, column_count.
         
     Raises:
-        HTTPException: If file is not a CSV, empty, or malformed.
+        HTTPException: If file is not a CSV, empty, exceeds 50MB limit, or malformed.
     """
     filename = file.filename or ""
     
@@ -39,6 +40,13 @@ async def process_and_save_csv(file: UploadFile) -> dict:
         raise HTTPException(
             status_code=400,
             detail="Uploaded file is empty.",
+        )
+
+    # Reject files exceeding 50MB size limit
+    if len(content_bytes) > MAX_FILE_SIZE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File size exceeds maximum allowed limit of {MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB.",
         )
 
     # 3. Try decoding across common text encodings (UTF-8-SIG, UTF-8, UTF-16, CP1252, Latin-1)

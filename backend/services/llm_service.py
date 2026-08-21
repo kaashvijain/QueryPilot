@@ -124,10 +124,17 @@ class LLMClient:
             except Exception as exc:
                 last_exception = exc
                 err_str = str(exc)
-                if ("503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < max_retries:
-                    retry_delay = attempt * 5.0 if ("429" in err_str or "RESOURCE_EXHAUSTED" in err_str) else attempt * 2.0
+                if ("503" in err_str or "UNAVAILABLE" in err_str) and attempt < max_retries:
+                    retry_delay = attempt * 2.0
                     logger.warning(
-                        f"LLM API rate limit or transient error (attempt {attempt}/{max_retries}), retrying in {retry_delay}s..."
+                        f"LLM API 503 transient error (attempt {attempt}/{max_retries}), retrying in {retry_delay}s..."
+                    )
+                    time.sleep(retry_delay)
+                    continue
+                elif ("429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < 2:
+                    retry_delay = 1.0
+                    logger.warning(
+                        f"LLM API rate limit / quota hit (attempt {attempt}), quick retry in {retry_delay}s..."
                     )
                     time.sleep(retry_delay)
                     continue

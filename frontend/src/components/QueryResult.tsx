@@ -47,6 +47,8 @@ export default function QueryResult({ result }: QueryResultProps) {
   const hasError = isSuccess === false || Boolean(error_message);
   const analystAnswer = insight || explanation;
 
+  const isMissingDataset = Boolean(error_message && (error_message.includes("not found") || error_message.includes("expired") || error_message.includes("Dataset")));
+
   return (
     <div className="workspace-fade-in" style={{ width: "100%", textAlign: "left" }}>
       {/* Execution Error Banner */}
@@ -54,15 +56,47 @@ export default function QueryResult({ result }: QueryResultProps) {
         <div
           style={{
             marginBottom: "1.5rem",
-            padding: "0.75rem 1rem",
+            padding: "1rem 1.25rem",
             borderRadius: "var(--radius-md)",
             backgroundColor: "var(--error-bg)",
             border: "1px solid var(--error-border)",
             color: "var(--error-red)",
-            fontSize: "0.85rem",
+            fontSize: "0.875rem",
           }}
         >
-          <strong>Query Error:</strong> {error_message || "Query execution failed."}
+          <div style={{ fontWeight: 600, marginBottom: "0.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            Unable to Complete Query Analysis
+          </div>
+          <div style={{ lineHeight: 1.5, opacity: 0.9 }}>
+            {error_message || "Failed to execute query against dataset. Please verify query structure."}
+          </div>
+          {isMissingDataset && (
+            <div style={{ marginTop: "0.75rem" }}>
+              <a
+                href="/"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  padding: "0.35rem 0.75rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  color: "var(--error-red)",
+                  backgroundColor: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid var(--error-border)",
+                  borderRadius: "var(--radius-sm)",
+                  textDecoration: "none",
+                }}
+              >
+                Upload CSV Dataset →
+              </a>
+            </div>
+          )}
         </div>
       )}
 

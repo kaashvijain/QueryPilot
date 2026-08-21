@@ -51,11 +51,17 @@ def execute_query(
     start_time = time.perf_counter()
     try:
         conn = get_db_connection(db_path, read_only=True)
+        # Enforce 10s query timeout limit to prevent long-running hanging operations
+        try:
+            conn.execute("SET max_execution_time = '10s';")
+        except Exception:
+            pass
     except Exception as exc:
         duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        logger.error(f"Database connection error for dataset '{dataset_id}': {exc}", exc_info=True)
         return SQLExecutionResult(
             success=False,
-            error_message=f"Database connection error: {str(exc)}",
+            error_message="Database connection error. Please verify dataset session.",
             execution_time_ms=duration_ms,
         )
 
@@ -77,10 +83,17 @@ def execute_query(
 
     except Exception as exc:
         duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
-        logger.error(f"DuckDB Query Execution Error: {str(exc)}")
+        err_str = str(exc)
+        logger.error(f"DuckDB Execution Error for query [{sql}]: {err_str}", exc_info=True)
+        
+        if "Timeout" in err_str or "max_execution_time" in err_str or "interrupt" in err_str.lower():
+            clean_msg = "Query execution timed out (exceeded 10s limit). Please try a more specific question."
+        else:
+            clean_msg = err_str
+
         return SQLExecutionResult(
             success=False,
-            error_message=f"Database Execution Error: {str(exc)}",
+            error_message=clean_msg,
             execution_time_ms=duration_ms,
         )
     finally:

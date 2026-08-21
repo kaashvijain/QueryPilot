@@ -2,8 +2,11 @@ import csv
 import io
 import os
 import uuid
+import logging
 from fastapi import HTTPException, UploadFile
 from db import ingest_csv_to_duckdb
+
+logger = logging.getLogger("querypilot.dataset_service")
 
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
 MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB limit
@@ -29,6 +32,7 @@ async def process_and_save_csv(file: UploadFile) -> dict:
     
     # 1. Reject non-CSV file extensions
     if not filename.lower().endswith(".csv"):
+        logger.warning(f"Rejected unsupported file upload: '{filename}'")
         raise HTTPException(
             status_code=400,
             detail="Invalid file type. Only .csv files are accepted.",
@@ -37,13 +41,15 @@ async def process_and_save_csv(file: UploadFile) -> dict:
     # 2. Read file bytes
     content_bytes = await file.read()
     if not content_bytes or len(content_bytes.strip()) == 0:
+        logger.warning(f"Rejected empty file upload: '{filename}'")
         raise HTTPException(
             status_code=400,
-            detail="Uploaded file is empty.",
+            detail="The uploaded file is empty. Please select a populated CSV file.",
         )
 
     # Reject files exceeding 50MB size limit
     if len(content_bytes) > MAX_FILE_SIZE_BYTES:
+        logger.warning(f"Rejected oversized file upload: '{filename}' ({len(content_bytes)} bytes)")
         raise HTTPException(
             status_code=413,
             detail=f"File size exceeds maximum allowed limit of {MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB.",
@@ -63,9 +69,10 @@ async def process_and_save_csv(file: UploadFile) -> dict:
             continue
 
     if content_text is None:
+        logger.error(f"Failed to decode text encoding for uploaded file: '{filename}'")
         raise HTTPException(
             status_code=400,
-            detail="Malformed file: File encoding is not valid text.",
+            detail="Malformed file: File encoding is not valid text. Please save as UTF-8 CSV.",
         )
 
     # 4. Validate CSV structure using csv.reader
@@ -77,17 +84,19 @@ async def process_and_save_csv(file: UploadFile) -> dict:
         stream = io.StringIO(content_text)
         reader = list(csv.reader(stream, delimiter=delimiter))
     except Exception as exc:
+        logger.error(f"CSV parsing error for file '{filename}': {exc}", exc_info=True)
         raise HTTPException(
             status_code=400,
-            detail=f"Malformed CSV content: {str(exc)}",
+            detail="Invalid CSV format. Please ensure your file is a valid CSV document.",
         )
 
     # Filter out completely empty trailing lines
     non_empty_rows = [row for row in reader if any(cell.strip() for cell in row)]
     if not non_empty_rows:
+        logger.warning(f"Uploaded CSV contains no non-empty rows: '{filename}'")
         raise HTTPException(
             status_code=400,
-            detail="Uploaded CSV file contains no data or columns.",
+            detail="The uploaded CSV file contains no data or columns.",
         )
 
     header = non_empty_rows[0]
@@ -103,12 +112,13 @@ async def process_and_save_csv(file: UploadFile) -> dict:
             column_count = len(header)
 
     if column_count == 0:
+        logger.warning(f"Uploaded CSV header has 0 columns: '{filename}'")
         raise HTTPException(
             status_code=400,
-            detail="Malformed CSV file: Header contains no columns.",
+            detail="Malformed CSV file: Header contains no valid column names.",
         )
 
-    row_count = len(non_empty_rows) - 1  # Exclude header row
+    row_count = max(0, len(non_empty_rows) - 1)  # Exclude header row if present
 
     # 5. Save sanitized text to uploads folder normalized as UTF-8
     dataset_id = str(uuid.uuid4())
@@ -119,21 +129,22 @@ async def process_and_save_csv(file: UploadFile) -> dict:
         with open(file_path, "w", encoding="utf-8", newline="") as f:
             f.write(content_text)
     except Exception as exc:
+        logger.error(f"Failed to write uploaded dataset file to disk: {exc}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to save uploaded dataset: {str(exc)}",
+            detail="Server storage error while saving uploaded dataset. Please try again.",
         )
 
     # 6. Ingest into DuckDB as an isolated table with inferred schema
     try:
         duckdb_info = ingest_csv_to_duckdb(dataset_id, file_path)
-        # Use DuckDB verified row count and column count
         row_count = duckdb_info["row_count"]
         column_count = len(duckdb_info["columns"])
     except Exception as exc:
+        logger.error(f"DuckDB ingestion failure for dataset '{dataset_id}': {exc}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to ingest CSV into DuckDB: {str(exc)}",
+            detail="Failed to load CSV dataset into analytical database. Please verify file integrity.",
         )
 
     return {

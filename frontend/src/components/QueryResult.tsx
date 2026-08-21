@@ -138,6 +138,21 @@ export default function QueryResult({ result }: QueryResultProps) {
               {results.row_count.toLocaleString()} {results.row_count === 1 ? "Row" : "Rows"}
             </span>
           )}
+
+          {/* Visualization Mode Badge */}
+          <span
+            style={{
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              backgroundColor: "#f0fdf4",
+              color: "#166534",
+              border: "1px solid #bbf7d0",
+              padding: "0.2rem 0.6rem",
+              borderRadius: "6px",
+            }}
+          >
+            Chart: {(result.chart?.type || result.chart_type || "table").toUpperCase()}
+          </span>
         </div>
       </div>
 

@@ -67,7 +67,7 @@ class LLMClient:
                 error_message="API Key is missing. Please configure GEMINI_API_KEY.",
             )
 
-        max_retries = 3
+        max_retries = 4
         last_exception = None
 
         for attempt in range(1, max_retries + 1):
@@ -125,7 +125,7 @@ class LLMClient:
                 last_exception = exc
                 err_str = str(exc)
                 if ("503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < max_retries:
-                    retry_delay = attempt * 2.0
+                    retry_delay = attempt * 5.0 if ("429" in err_str or "RESOURCE_EXHAUSTED" in err_str) else attempt * 2.0
                     logger.warning(
                         f"LLM API rate limit or transient error (attempt {attempt}/{max_retries}), retrying in {retry_delay}s..."
                     )

@@ -11,6 +11,13 @@ from main import app
 client = TestClient(app)
 
 
+@pytest.fixture(autouse=True)
+def use_isolated_db(monkeypatch, tmp_path):
+    """Isolates DuckDB file per test module execution to prevent file locks."""
+    test_db = str(tmp_path / "test_dataset.duckdb")
+    monkeypatch.setattr("db.DEFAULT_DB_PATH", test_db)
+
+
 def test_upload_valid_csv():
     """Test uploading a valid CSV file."""
     csv_content = "customer_id,product,quantity,unit_price\n101,Laptop,2,1200.00\n102,Monitor,1,300.00\n103,Keyboard,5,50.00\n"

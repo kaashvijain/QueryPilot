@@ -2,6 +2,7 @@ import os
 import re
 import duckdb
 from typing import Optional, List, Dict, Any
+from fastapi import HTTPException
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 DEFAULT_DB_PATH = os.path.join(DATA_DIR, "querypilot.duckdb")
@@ -22,12 +23,12 @@ def get_table_name(dataset_id: str) -> str:
     return f"dataset_{clean_id}"
 
 
-def get_db_connection(db_path: Optional[str] = None) -> duckdb.DuckDBPyConnection:
+def get_db_connection(db_path: Optional[str] = None, read_only: bool = False) -> duckdb.DuckDBPyConnection:
     """Returns a DuckDB connection to the database file or in-memory instance."""
     if db_path is None:
         ensure_data_dir()
         db_path = DEFAULT_DB_PATH
-    return duckdb.connect(database=db_path, read_only=False)
+    return duckdb.connect(database=db_path, read_only=read_only)
 
 
 def ingest_csv_to_duckdb(dataset_id: str, csv_file_path: str, db_path: Optional[str] = None) -> Dict[str, Any]:
@@ -38,7 +39,7 @@ def ingest_csv_to_duckdb(dataset_id: str, csv_file_path: str, db_path: Optional[
     table_name = get_table_name(dataset_id)
     abs_csv_path = os.path.abspath(csv_file_path).replace("\\", "/")
     
-    conn = get_db_connection(db_path)
+    conn = get_db_connection(db_path, read_only=False)
     try:
         # Drop table if already existing for this dataset ID
         conn.execute(f'DROP TABLE IF EXISTS "{table_name}"')
@@ -67,7 +68,7 @@ def ingest_csv_to_duckdb(dataset_id: str, csv_file_path: str, db_path: Optional[
 def get_dataset_columns(dataset_id: str, db_path: Optional[str] = None) -> List[Dict[str, str]]:
     """Retrieves column names and data types for an ingested dataset."""
     table_name = get_table_name(dataset_id)
-    conn = get_db_connection(db_path)
+    conn = get_db_connection(db_path, read_only=True)
     try:
         describe_res = conn.execute(f'DESCRIBE "{table_name}"').fetchall()
         return [{"name": str(row[0]), "type": str(row[1])} for row in describe_res]
@@ -78,7 +79,7 @@ def get_dataset_columns(dataset_id: str, db_path: Optional[str] = None) -> List[
 def get_dataset_row_count(dataset_id: str, db_path: Optional[str] = None) -> int:
     """Retrieves total row count for an ingested dataset table in DuckDB."""
     table_name = get_table_name(dataset_id)
-    conn = get_db_connection(db_path)
+    conn = get_db_connection(db_path, read_only=True)
     try:
         count_res = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()
         return count_res[0] if count_res else 0
@@ -86,9 +87,58 @@ def get_dataset_row_count(dataset_id: str, db_path: Optional[str] = None) -> int
         conn.close()
 
 
+def get_dataset_full_schema(dataset_id: str, db_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Retrieves full schema details (table_name, row_count, columns with types) for a dataset_id.
+    Raises HTTPException 404 if dataset table or database file does not exist.
+    """
+    if db_path is None:
+        ensure_data_dir()
+        db_path = DEFAULT_DB_PATH
+
+    if not os.path.exists(db_path):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Dataset with ID '{dataset_id}' not found.",
+        )
+
+    table_name = get_table_name(dataset_id)
+    try:
+        conn = get_db_connection(db_path, read_only=True)
+    except Exception:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Dataset with ID '{dataset_id}' not found.",
+        )
+
+    try:
+        tables_res = conn.execute("SHOW TABLES;").fetchall()
+        existing_tables = [row[0] for row in tables_res]
+        if table_name not in existing_tables:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Dataset with ID '{dataset_id}' not found.",
+            )
+
+        describe_res = conn.execute(f'DESCRIBE "{table_name}"').fetchall()
+        columns = [{"name": str(row[0]), "type": str(row[1])} for row in describe_res]
+
+        count_res = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()
+        row_count = count_res[0] if count_res else 0
+
+        return {
+            "dataset_id": dataset_id,
+            "table_name": table_name,
+            "row_count": row_count,
+            "columns": columns,
+        }
+    finally:
+        conn.close()
+
+
 def query_dataset(dataset_id: str, sql_select: str, db_path: Optional[str] = None) -> Dict[str, Any]:
     """Executes a SQL query against the dataset table in DuckDB and returns columns + rows."""
-    conn = get_db_connection(db_path)
+    conn = get_db_connection(db_path, read_only=True)
     try:
         res = conn.execute(sql_select)
         cols = [desc[0] for desc in res.description] if res.description else []

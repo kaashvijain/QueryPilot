@@ -69,7 +69,7 @@ def execute_query(
         res = conn.execute(sql)
         columns = [desc[0] for desc in res.description] if res.description else []
         fetched_rows = res.fetchall()
-        rows = [list(r) for r in fetched_rows]
+        rows = [list(r) for r in fetched_rows[:10000]]
         row_count = len(rows)
         duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
 

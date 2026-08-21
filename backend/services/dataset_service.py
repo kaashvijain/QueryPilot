@@ -28,7 +28,7 @@ async def process_and_save_csv(file: UploadFile) -> dict:
     Raises:
         HTTPException: If file is not a CSV, empty, exceeds 50MB limit, or malformed.
     """
-    filename = file.filename or ""
+    filename = os.path.basename(file.filename or "")
     
     # 1. Reject non-CSV file extensions
     if not filename.lower().endswith(".csv"):

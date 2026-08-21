@@ -11,7 +11,8 @@ class SQLValidationResult(BaseModel):
 
 FORBIDDEN_KEYWORDS: Set[str] = {
     "INSERT", "UPDATE", "DELETE", "DROP", "ALTER",
-    "CREATE", "TRUNCATE", "EXEC", "EXECUTE", "PRAGMA", "ATTACH", "COPY"
+    "CREATE", "TRUNCATE", "EXEC", "EXECUTE", "PRAGMA", "ATTACH", "COPY",
+    "INSTALL", "LOAD", "EXPORT", "IMPORT"
 }
 
 STANDARD_SQL_KEYWORDS: Set[str] = {

@@ -54,3 +54,7 @@ wheels/
 *.duckdb
 *.sqlite
 *.sqlite3
+
+# Uploaded Datasets
+backend/uploads/*
+!backend/uploads/.gitkeep

@@ -1,6 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from config import get_settings, Settings
+from services.dataset_service import process_and_save_csv
 
 settings = get_settings()
 
@@ -21,6 +23,13 @@ app.add_middleware(
 )
 
 
+class DatasetUploadResponse(BaseModel):
+    dataset_id: str
+    filename: str
+    row_count: int
+    column_count: int
+
+
 @app.get("/")
 def read_root(config: Settings = Depends(get_settings)):
     return {
@@ -39,3 +48,13 @@ def health_check(config: Settings = Depends(get_settings)):
         "status": "ok",
         "environment": config.environment,
     }
+
+
+@app.post("/api/dataset", response_model=DatasetUploadResponse, status_code=201)
+async def upload_dataset(file: UploadFile = File(...)):
+    """
+    Upload a CSV dataset.
+    Validates CSV format, stores the file locally, and returns dataset metadata.
+    """
+    result = await process_and_save_csv(file)
+    return result

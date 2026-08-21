@@ -9,9 +9,13 @@ interface UploadedDataset {
   column_count: number;
 }
 
+interface DatasetUploadProps {
+  onUploadSuccess?: (datasetId: string) => void;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export default function DatasetUpload() {
+export default function DatasetUpload({ onUploadSuccess }: DatasetUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +88,9 @@ export default function DatasetUpload() {
       }
 
       setUploadedDataset(data);
+      if (onUploadSuccess) {
+        onUploadSuccess(data.dataset_id);
+      }
       setFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -96,7 +103,7 @@ export default function DatasetUpload() {
   };
 
   return (
-    <div style={{ maxWidth: "600px", margin: "0 auto", textAlign: "left" }}>
+    <div style={{ width: "100%", textAlign: "left" }}>
       {/* Upload Drag & Drop Zone */}
       <div
         onDragOver={handleDragOver}

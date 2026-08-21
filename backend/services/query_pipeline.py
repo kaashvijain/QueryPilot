@@ -8,6 +8,7 @@ from services.sql_validator import validate_sql_query
 from services.query_executor import execute_query, SQLExecutionResult
 from services.sql_corrector import generate_corrected_sql
 from services.chart_selector import select_visualization
+from services.insight_generator import generate_insight_from_results
 
 logger = logging.getLogger("querypilot.query_pipeline")
 
@@ -157,11 +158,23 @@ def run_query_pipeline(
                 row_count=exec_res.row_count,
                 question=question,
             )
+
+            # Generate concise, data-grounded natural language insight
+            insight_res = generate_insight_from_results(
+                question=question,
+                sql=current_sql,
+                columns=exec_res.columns,
+                rows=exec_res.rows,
+                row_count=exec_res.row_count,
+                llm_client=client,
+            )
+            final_explanation = insight_res.insight or current_explanation
+
             return QueryPipelineResult(
                 dataset_id=dataset_id,
                 question=question,
                 sql=current_sql,
-                explanation=current_explanation,
+                explanation=final_explanation,
                 chart_type=deterministic_chart_type,
                 results=QueryResultsSchema(
                     columns=exec_res.columns,

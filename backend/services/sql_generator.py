@@ -1,7 +1,18 @@
+from enum import Enum
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 from services.schema_formatter import format_schema_context
 from services.llm_service import LLMClient, LLMResponse
+
+
+class ChartType(str, Enum):
+    """Allowed chart visualization types for QueryPilot results."""
+    BAR = "bar"
+    LINE = "line"
+    SCATTER = "scatter"
+    PIE = "pie"
+    KPI = "kpi"
+    TABLE = "table"
 
 
 class SQLGenerationResult(BaseModel):
@@ -17,7 +28,7 @@ class SQLResponseSchema(BaseModel):
     """Schema enforced on LLM structured JSON output."""
     sql: str = Field(description="Read-only analytical SELECT query targeting dataset table")
     explanation: str = Field(description="Brief plain-English explanation of what the query calculates")
-    chart_type: str = Field(description="Visualization type: bar, line, scatter, pie, kpi, or table")
+    chart_type: ChartType = Field(description="Visualization type: bar, line, scatter, pie, kpi, or table")
 
 
 SYSTEM_PROMPT = """You are QueryPilot, an expert AI data analyst.
@@ -55,7 +66,8 @@ def generate_sql_from_question(
 ) -> SQLGenerationResult:
     """
     Translates a natural language question into structured SQL, explanation, and chart recommendation.
-    Does NOT execute or validate the SQL query.
+    Enforces strict validation of the LLM response (required non-empty sql, explanation, and allowed chart_type enum).
+    Does NOT execute or validate the SQL query against DuckDB.
     """
     if not question or not question.strip():
         return SQLGenerationResult(
@@ -84,21 +96,48 @@ def generate_sql_from_question(
             error_message=response.error_message or "Failed to generate SQL from LLM.",
         )
 
-    # Extract structured fields
-    json_data = response.json_data or {}
-    sql = json_data.get("sql") or ""
-    explanation = json_data.get("explanation") or ""
-    chart_type = json_data.get("chart_type") or "table"
-
-    if not sql:
+    json_data = response.json_data
+    if json_data is None:
         return SQLGenerationResult(
             success=False,
-            error_message="LLM response did not contain a valid SQL query.",
+            error_message="Model response is malformed or not valid JSON.",
+        )
+
+    # 1. Strict Validation: Reject missing or non-string/empty 'sql'
+    sql = json_data.get("sql")
+    if not isinstance(sql, str) or not sql.strip():
+        return SQLGenerationResult(
+            success=False,
+            error_message="Model response missing required non-empty field 'sql'.",
+        )
+
+    # 2. Strict Validation: Reject missing or non-string/empty 'explanation'
+    explanation = json_data.get("explanation")
+    if not isinstance(explanation, str) or not explanation.strip():
+        return SQLGenerationResult(
+            success=False,
+            error_message="Model response missing required non-empty field 'explanation'.",
+        )
+
+    # 3. Strict Validation: Reject missing or invalid 'chart_type' enum value
+    chart_type_raw = json_data.get("chart_type")
+    if not isinstance(chart_type_raw, str) or not chart_type_raw.strip():
+        return SQLGenerationResult(
+            success=False,
+            error_message="Model response missing required field 'chart_type'.",
+        )
+
+    clean_chart_type = chart_type_raw.strip().lower()
+    allowed_types = [c.value for c in ChartType]
+    if clean_chart_type not in allowed_types:
+        return SQLGenerationResult(
+            success=False,
+            error_message=f"Invalid chart_type '{chart_type_raw}'. Allowed values: {', '.join(allowed_types)}.",
         )
 
     return SQLGenerationResult(
-        sql=sql,
-        explanation=explanation,
-        chart_type=chart_type.lower(),
+        sql=sql.strip(),
+        explanation=explanation.strip(),
+        chart_type=clean_chart_type,
         success=True,
     )

@@ -101,12 +101,29 @@ def test_generate_sql_malformed_llm_response(sample_schema):
     assert "Network Timeout" in result.error_message
 
 
-def test_generate_sql_empty_json_response(sample_schema):
-    """Test handling when LLM succeeds but returns empty or missing SQL."""
+def test_reject_malformed_json_response(sample_schema):
+    """Test strict rejection when LLM returns non-JSON raw text."""
     mock_client = MagicMock()
     mock_client.generate.return_value = LLMResponse(
-        text="{}",
-        json_data={},
+        text="Plain text non-JSON output",
+        json_data=None,
+        model_name="gemini-3.6-flash",
+        success=True,
+    )
+
+    question = "What is total sales?"
+    result = generate_sql_from_question(question, sample_schema, llm_client=mock_client)
+
+    assert result.success is False
+    assert "malformed or not valid JSON" in result.error_message
+
+
+def test_reject_missing_sql_field(sample_schema):
+    """Test strict rejection when 'sql' field is missing or empty."""
+    mock_client = MagicMock()
+    mock_client.generate.return_value = LLMResponse(
+        text='{"explanation": "Missing SQL", "chart_type": "bar"}',
+        json_data={"explanation": "Missing SQL", "chart_type": "bar"},
         model_name="gemini-3.6-flash",
         success=True,
     )
@@ -115,7 +132,42 @@ def test_generate_sql_empty_json_response(sample_schema):
     result = generate_sql_from_question(question, sample_schema, llm_client=mock_client)
 
     assert result.success is False
-    assert "did not contain a valid SQL query" in result.error_message
+    assert "missing required non-empty field 'sql'" in result.error_message
+
+
+def test_reject_missing_explanation_field(sample_schema):
+    """Test strict rejection when 'explanation' field is missing or empty."""
+    mock_client = MagicMock()
+    mock_client.generate.return_value = LLMResponse(
+        text='{"sql": "SELECT * FROM sales", "chart_type": "table"}',
+        json_data={"sql": "SELECT * FROM sales", "chart_type": "table"},
+        model_name="gemini-3.6-flash",
+        success=True,
+    )
+
+    question = "Show all sales."
+    result = generate_sql_from_question(question, sample_schema, llm_client=mock_client)
+
+    assert result.success is False
+    assert "missing required non-empty field 'explanation'" in result.error_message
+
+
+def test_reject_invalid_chart_type(sample_schema):
+    """Test strict rejection when 'chart_type' is not in allowed Enum values."""
+    mock_client = MagicMock()
+    mock_client.generate.return_value = LLMResponse(
+        text='{"sql": "SELECT * FROM sales", "explanation": "Valid", "chart_type": "histogram"}',
+        json_data={"sql": "SELECT * FROM sales", "explanation": "Valid", "chart_type": "histogram"},
+        model_name="gemini-3.6-flash",
+        success=True,
+    )
+
+    question = "Show sales distribution."
+    result = generate_sql_from_question(question, sample_schema, llm_client=mock_client)
+
+    assert result.success is False
+    assert "Invalid chart_type 'histogram'" in result.error_message
+    assert "Allowed values: bar, line, scatter, pie, kpi, table" in result.error_message
 
 
 def test_generate_sql_empty_question(sample_schema):

@@ -265,32 +265,49 @@ export default function QueryInput({
         </div>
       </div>
 
-      {/* Multi-step Checklist Loading State */}
+      {/* Multi-stage Progress Loading State */}
       {isProcessing && (
         <div
           style={{
             marginTop: "1rem",
-            padding: "0.85rem 1rem",
+            padding: "1rem 1.25rem",
             backgroundColor: "var(--bg-secondary)",
             borderRadius: "var(--radius-md)",
             border: "1px solid var(--border-subtle)",
           }}
         >
-          <div style={{ fontSize: "0.825rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.4rem" }}>
-            Analyzing your data
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.6rem" }}>
+            <div
+              style={{
+                width: "14px",
+                height: "14px",
+                borderRadius: "50%",
+                border: "2px solid var(--accent-blue)",
+                borderTopColor: "transparent",
+                animation: "spin 0.8s linear infinite",
+              }}
+            />
+            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>
+              Analyzing your question
+            </span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.8rem" }}>
-            <div style={{ color: loadingStepIdx >= 0 ? "var(--success-green)" : "var(--text-muted)" }}>
-              {loadingStepIdx > 0 ? "✓" : "●"} Understanding your question
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.825rem" }}>
+            <div style={{ color: loadingStepIdx >= 0 ? "var(--success-green)" : "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span>{loadingStepIdx > 0 ? "✓" : "●"}</span>
+              <span>Understanding question & schema context</span>
             </div>
-            <div style={{ color: loadingStepIdx >= 1 ? (loadingStepIdx > 1 ? "var(--success-green)" : "var(--text-primary)") : "var(--text-muted)" }}>
-              {loadingStepIdx > 1 ? "✓" : loadingStepIdx === 1 ? "●" : "○"} Generating SQL
+            <div style={{ color: loadingStepIdx >= 1 ? (loadingStepIdx > 1 ? "var(--success-green)" : "var(--text-primary)") : "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span>{loadingStepIdx > 1 ? "✓" : loadingStepIdx === 1 ? "●" : "○"}</span>
+              <span style={{ fontWeight: loadingStepIdx === 1 ? 600 : 400 }}>Translating prompt into schema-aware SQL...</span>
             </div>
-            <div style={{ color: loadingStepIdx >= 2 ? (loadingStepIdx > 2 ? "var(--success-green)" : "var(--text-primary)") : "var(--text-muted)" }}>
-              {loadingStepIdx > 2 ? "✓" : loadingStepIdx === 2 ? "●" : "○"} Running analysis
+            <div style={{ color: loadingStepIdx >= 2 ? (loadingStepIdx > 2 ? "var(--success-green)" : "var(--text-primary)") : "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span>{loadingStepIdx > 2 ? "✓" : loadingStepIdx === 2 ? "●" : "○"}</span>
+              <span style={{ fontWeight: loadingStepIdx === 2 ? 600 : 400 }}>Executing query against DuckDB analytical engine...</span>
             </div>
-            <div style={{ color: loadingStepIdx >= 3 ? "var(--text-primary)" : "var(--text-muted)" }}>
-              {loadingStepIdx === 3 ? "●" : "○"} Preparing insights
+            <div style={{ color: loadingStepIdx >= 3 ? "var(--text-primary)" : "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span>{loadingStepIdx === 3 ? "●" : "○"}</span>
+              <span style={{ fontWeight: loadingStepIdx === 3 ? 600 : 400 }}>Synthesizing data-grounded natural language insights...</span>
             </div>
           </div>
         </div>

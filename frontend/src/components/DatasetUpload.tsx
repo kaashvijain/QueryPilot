@@ -224,7 +224,22 @@ export default function DatasetUpload({ onUploadSuccess }: DatasetUploadProps) {
             gap: "0.5rem",
           }}
         >
-          {isUploading ? "Uploading CSV Dataset..." : "Upload Dataset"}
+          {isUploading ? (
+            <>
+              <svg
+                style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="12" />
+              </svg>
+              <span>Uploading CSV & Ingesting Dataset into DuckDB...</span>
+            </>
+          ) : (
+            "Upload Dataset"
+          )}
         </button>
       </div>
 

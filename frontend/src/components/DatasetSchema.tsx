@@ -74,16 +74,56 @@ export default function DatasetSchema({ datasetId, compactMode = false }: Datase
       <div
         style={{
           width: "100%",
-          padding: compactMode ? "1.5rem" : "2.5rem 1.5rem",
+          padding: compactMode ? "1rem" : "1.5rem",
           backgroundColor: "var(--bg-primary)",
           borderRadius: "var(--radius-md)",
           border: "1px solid var(--border-subtle)",
-          textAlign: "center",
+          textAlign: "left",
         }}
       >
-        <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 500 }}>
-          Loading dataset schema...
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+          <div
+            style={{
+              width: "14px",
+              height: "14px",
+              borderRadius: "50%",
+              border: "2px solid var(--accent-blue)",
+              borderTopColor: "transparent",
+              animation: "spin 0.8s linear infinite",
+            }}
+          />
+          <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+            Analyzing table schema & column data types...
+          </span>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: compactMode ? "repeat(auto-fill, minmax(220px, 1fr))" : "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: "0.5rem",
+          }}
+        >
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              style={{
+                height: "36px",
+                borderRadius: "var(--radius-sm)",
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px solid var(--border-subtle)",
+                animation: "pulse 1.5s ease-in-out infinite",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "0 0.75rem",
+              }}
+            >
+              <div style={{ width: "80px", height: "10px", backgroundColor: "var(--border-medium)", borderRadius: "2px" }} />
+              <div style={{ width: "45px", height: "14px", backgroundColor: "var(--border-subtle)", borderRadius: "4px" }} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

@@ -1,0 +1,557 @@
+[
+  {
+    "id": "Q01",
+    "category": "Simple Aggregation",
+    "question": "What is the total revenue across all sales?",
+    "expected_behavior": "Calculates total revenue by summing quantity * unit_price or sum of sales/revenue column.",
+    "expected_tables_columns": ["sales", "quantity", "unit_price", "revenue"],
+    "expected_query_characteristics": {
+      "aggregations": ["SUM"],
+      "group_by": false,
+      "order_by": false,
+      "limit": false
+    }
+  },
+  {
+    "id": "Q02",
+    "category": "Simple Aggregation",
+    "question": "What is the total quantity of items sold?",
+    "expected_behavior": "Computes the total sum of all item quantities sold across the entire dataset.",
+    "expected_tables_columns": ["quantity"],
+    "expected_query_characteristics": {
+      "aggregations": ["SUM"],
+      "group_by": false,
+      "order_by": false
+    }
+  },
+  {
+    "id": "Q03",
+    "category": "Simple Aggregation",
+    "question": "What is the highest unit price recorded for any item?",
+    "expected_behavior": "Finds the maximum unit_price value present in the dataset.",
+    "expected_tables_columns": ["unit_price", "price"],
+    "expected_query_characteristics": {
+      "aggregations": ["MAX"],
+      "group_by": false
+    }
+  },
+  {
+    "id": "Q04",
+    "category": "Simple Aggregation",
+    "question": "What is the minimum quantity in a single order?",
+    "expected_behavior": "Finds the minimum quantity value across order rows.",
+    "expected_tables_columns": ["quantity"],
+    "expected_query_characteristics": {
+      "aggregations": ["MIN"]
+    }
+  },
+  {
+    "id": "Q05",
+    "category": "Simple Aggregation",
+    "question": "What is the total overall profit generated?",
+    "expected_behavior": "Computes total profit by summing the profit column.",
+    "expected_tables_columns": ["profit"],
+    "expected_query_characteristics": {
+      "aggregations": ["SUM"]
+    }
+  },
+  {
+    "id": "Q06",
+    "category": "Filtering & Predicates",
+    "question": "Show all orders with a total sale amount greater than $1,000.",
+    "expected_behavior": "Filters rows where total order sale amount (or quantity * unit_price) exceeds 1000.",
+    "expected_tables_columns": ["sales", "unit_price", "quantity"],
+    "expected_query_characteristics": {
+      "where_clause": true,
+      "comparison_operator": ">"
+    }
+  },
+  {
+    "id": "Q07",
+    "category": "Filtering & Predicates",
+    "question": "List all transactions from the Technology category.",
+    "expected_behavior": "Filters rows where category is equal to Technology.",
+    "expected_tables_columns": ["category"],
+    "expected_query_characteristics": {
+      "where_clause": true,
+      "filter_value": "Technology"
+    }
+  },
+  {
+    "id": "Q08",
+    "category": "Filtering & Predicates",
+    "question": "Which sales transactions had a discount greater than 15%?",
+    "expected_behavior": "Filters records where discount > 0.15.",
+    "expected_tables_columns": ["discount"],
+    "expected_query_characteristics": {
+      "where_clause": true,
+      "comparison_operator": ">"
+    }
+  },
+  {
+    "id": "Q09",
+    "category": "Filtering & Predicates",
+    "question": "Find all orders shipped via Same Day mode.",
+    "expected_behavior": "Filters records where ship_mode equals Same Day.",
+    "expected_tables_columns": ["ship_mode"],
+    "expected_query_characteristics": {
+      "where_clause": true,
+      "filter_value": "Same Day"
+    }
+  },
+  {
+    "id": "Q10",
+    "category": "Filtering & Predicates",
+    "question": "Show all orders that resulted in a financial loss (negative profit).",
+    "expected_behavior": "Filters rows where profit is less than 0.",
+    "expected_tables_columns": ["profit"],
+    "expected_query_characteristics": {
+      "where_clause": true,
+      "comparison_operator": "< 0"
+    }
+  },
+  {
+    "id": "Q11",
+    "category": "Sorting & Ordering",
+    "question": "List all products ordered by unit price from highest to lowest.",
+    "expected_behavior": "Selects products sorted by unit_price in descending order.",
+    "expected_tables_columns": ["product", "unit_price"],
+    "expected_query_characteristics": {
+      "order_by": true,
+      "direction": "DESC"
+    }
+  },
+  {
+    "id": "Q12",
+    "category": "Sorting & Ordering",
+    "question": "Show all regions ordered alphabetically.",
+    "expected_behavior": "Selects distinct regions ordered alphabetically ASC.",
+    "expected_tables_columns": ["region"],
+    "expected_query_characteristics": {
+      "order_by": true,
+      "direction": "ASC"
+    }
+  },
+  {
+    "id": "Q13",
+    "category": "Sorting & Ordering",
+    "question": "Sort all order dates from the most recent to the oldest.",
+    "expected_behavior": "Sorts order rows by order_date DESC.",
+    "expected_tables_columns": ["order_date"],
+    "expected_query_characteristics": {
+      "order_by": true,
+      "direction": "DESC"
+    }
+  },
+  {
+    "id": "Q14",
+    "category": "Sorting & Ordering",
+    "question": "Show customer segments sorted by total sales volume descending.",
+    "expected_behavior": "Groups by segment, sums sales, and orders by total sales DESC.",
+    "expected_tables_columns": ["segment", "quantity", "unit_price", "sales"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "order_by": true,
+      "direction": "DESC"
+    }
+  },
+  {
+    "id": "Q15",
+    "category": "Sorting & Ordering",
+    "question": "List all sub-categories ordered by total profit from lowest to highest.",
+    "expected_behavior": "Groups by sub_category, sums profit, and orders ASC.",
+    "expected_tables_columns": ["sub_category", "profit"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "order_by": true,
+      "direction": "ASC"
+    }
+  },
+  {
+    "id": "Q16",
+    "category": "GROUP BY Aggregations",
+    "question": "What is the total revenue for each product category?",
+    "expected_behavior": "Groups rows by category and sums total revenue.",
+    "expected_tables_columns": ["category", "quantity", "unit_price", "sales"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "aggregations": ["SUM"]
+    }
+  },
+  {
+    "id": "Q17",
+    "category": "GROUP BY Aggregations",
+    "question": "What is the total quantity sold per region?",
+    "expected_behavior": "Groups rows by region and calculates SUM(quantity).",
+    "expected_tables_columns": ["region", "quantity"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "aggregations": ["SUM"]
+    }
+  },
+  {
+    "id": "Q18",
+    "category": "GROUP BY Aggregations",
+    "question": "Calculate the total profit generated per customer segment.",
+    "expected_behavior": "Groups by segment and computes SUM(profit).",
+    "expected_tables_columns": ["segment", "profit"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "aggregations": ["SUM"]
+    }
+  },
+  {
+    "id": "Q19",
+    "category": "GROUP BY Aggregations",
+    "question": "Find total revenue and total profit by sub-category.",
+    "expected_behavior": "Groups by sub_category and computes SUM(sales) and SUM(profit).",
+    "expected_tables_columns": ["sub_category", "sales", "profit"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "aggregations": ["SUM"]
+    }
+  },
+  {
+    "id": "Q20",
+    "category": "GROUP BY Aggregations",
+    "question": "What is the total order volume per shipping mode?",
+    "expected_behavior": "Groups by ship_mode and counts total orders or sums quantity.",
+    "expected_tables_columns": ["ship_mode"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "aggregations": ["COUNT", "SUM"]
+    }
+  },
+  {
+    "id": "Q21",
+    "category": "Date & Time Filtering",
+    "question": "What was the total revenue in the year 2024?",
+    "expected_behavior": "Filters order_date for year 2024 and calculates SUM(revenue).",
+    "expected_tables_columns": ["order_date", "sales"],
+    "expected_query_characteristics": {
+      "date_filter": true,
+      "aggregations": ["SUM"]
+    }
+  },
+  {
+    "id": "Q22",
+    "category": "Date & Time Filtering",
+    "question": "Show total sales volume for the last 6 months.",
+    "expected_behavior": "Filters order_date >= CURRENT_DATE - INTERVAL 6 MONTH (or date range) and sums sales.",
+    "expected_tables_columns": ["order_date", "quantity", "unit_price"],
+    "expected_query_characteristics": {
+      "date_filter": true,
+      "interval": "6 months"
+    }
+  },
+  {
+    "id": "Q23",
+    "category": "Date & Time Filtering",
+    "question": "What was the total profit in Q1 2024?",
+    "expected_behavior": "Filters order_date between 2024-01-01 and 2024-03-31 and sums profit.",
+    "expected_tables_columns": ["order_date", "profit"],
+    "expected_query_characteristics": {
+      "date_filter": true,
+      "quarter": 1
+    }
+  },
+  {
+    "id": "Q24",
+    "category": "Date & Time Filtering",
+    "question": "List monthly total sales for the past year.",
+    "expected_behavior": "Groups order_date by month/year and sums total revenue.",
+    "expected_tables_columns": ["order_date", "sales"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "date_trunc": "month"
+    }
+  },
+  {
+    "id": "Q25",
+    "category": "Date & Time Filtering",
+    "question": "How many orders were placed in December 2024?",
+    "expected_behavior": "Filters for order_date in Dec 2024 and computes COUNT(order_id).",
+    "expected_tables_columns": ["order_date", "order_id"],
+    "expected_query_characteristics": {
+      "date_filter": true,
+      "aggregations": ["COUNT"]
+    }
+  },
+  {
+    "id": "Q26",
+    "category": "Averages & Means",
+    "question": "What is the average order revenue per transaction?",
+    "expected_behavior": "Calculates AVG(quantity * unit_price) or AVG(sales).",
+    "expected_tables_columns": ["unit_price", "quantity", "sales"],
+    "expected_query_characteristics": {
+      "aggregations": ["AVG"]
+    }
+  },
+  {
+    "id": "Q27",
+    "category": "Averages & Means",
+    "question": "What is the average discount rate given per category?",
+    "expected_behavior": "Groups by category and computes AVG(discount).",
+    "expected_tables_columns": ["category", "discount"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "aggregations": ["AVG"]
+    }
+  },
+  {
+    "id": "Q28",
+    "category": "Averages & Means",
+    "question": "What is the average quantity of products per order?",
+    "expected_behavior": "Computes AVG(quantity).",
+    "expected_tables_columns": ["quantity"],
+    "expected_query_characteristics": {
+      "aggregations": ["AVG"]
+    }
+  },
+  {
+    "id": "Q29",
+    "category": "Averages & Means",
+    "question": "What is the average profit per region?",
+    "expected_behavior": "Groups by region and computes AVG(profit).",
+    "expected_tables_columns": ["region", "profit"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "aggregations": ["AVG"]
+    }
+  },
+  {
+    "id": "Q30",
+    "category": "Averages & Means",
+    "question": "Calculate the mean shipping cost per shipping mode.",
+    "expected_behavior": "Groups by ship_mode and computes AVG(shipping_cost) or AVG(freight).",
+    "expected_tables_columns": ["ship_mode", "shipping_cost"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "aggregations": ["AVG"]
+    }
+  },
+  {
+    "id": "Q31",
+    "category": "Counts & Cardinality",
+    "question": "How many unique customers made a purchase?",
+    "expected_behavior": "Computes COUNT(DISTINCT customer_id).",
+    "expected_tables_columns": ["customer_id"],
+    "expected_query_characteristics": {
+      "aggregations": ["COUNT DISTINCT"]
+    }
+  },
+  {
+    "id": "Q32",
+    "category": "Counts & Cardinality",
+    "question": "How many total products exist in the dataset catalog?",
+    "expected_behavior": "Computes COUNT(DISTINCT product_id) or COUNT(DISTINCT product).",
+    "expected_tables_columns": ["product", "product_id"],
+    "expected_query_characteristics": {
+      "aggregations": ["COUNT DISTINCT"]
+    }
+  },
+  {
+    "id": "Q33",
+    "category": "Counts & Cardinality",
+    "question": "How many total orders were completed?",
+    "expected_behavior": "Computes COUNT(order_id) or COUNT(*).",
+    "expected_tables_columns": ["order_id"],
+    "expected_query_characteristics": {
+      "aggregations": ["COUNT"]
+    }
+  },
+  {
+    "id": "Q34",
+    "category": "Counts & Cardinality",
+    "question": "How many distinct states or regions are represented?",
+    "expected_behavior": "Computes COUNT(DISTINCT state) or COUNT(DISTINCT region).",
+    "expected_tables_columns": ["state", "region"],
+    "expected_query_characteristics": {
+      "aggregations": ["COUNT DISTINCT"]
+    }
+  },
+  {
+    "id": "Q35",
+    "category": "Counts & Cardinality",
+    "question": "Count the number of transactions per customer segment.",
+    "expected_behavior": "Groups by segment and computes COUNT(*).",
+    "expected_tables_columns": ["segment"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "aggregations": ["COUNT"]
+    }
+  },
+  {
+    "id": "Q36",
+    "category": "Top-N & Bottom-N Queries",
+    "question": "What are the top 5 products by revenue?",
+    "expected_behavior": "Groups by product, calculates SUM(sales), orders DESC, LIMIT 5.",
+    "expected_tables_columns": ["product", "quantity", "unit_price", "sales"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "order_by": true,
+      "direction": "DESC",
+      "limit": 5
+    }
+  },
+  {
+    "id": "Q37",
+    "category": "Top-N & Bottom-N Queries",
+    "question": "Who are the top 3 customers by total profit?",
+    "expected_behavior": "Groups by customer_id/name, sums profit, orders DESC, LIMIT 3.",
+    "expected_tables_columns": ["customer_id", "customer_name", "profit"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "order_by": true,
+      "direction": "DESC",
+      "limit": 3
+    }
+  },
+  {
+    "id": "Q38",
+    "category": "Top-N & Bottom-N Queries",
+    "question": "Which 5 products have the lowest sales volume?",
+    "expected_behavior": "Groups by product, sums quantity/sales, orders ASC, LIMIT 5.",
+    "expected_tables_columns": ["product", "quantity", "sales"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "order_by": true,
+      "direction": "ASC",
+      "limit": 5
+    }
+  },
+  {
+    "id": "Q39",
+    "category": "Top-N & Bottom-N Queries",
+    "question": "What are the top 10 highest value individual orders?",
+    "expected_behavior": "Orders individual transaction rows by total sales DESC, LIMIT 10.",
+    "expected_tables_columns": ["order_id", "sales"],
+    "expected_query_characteristics": {
+      "order_by": true,
+      "direction": "DESC",
+      "limit": 10
+    }
+  },
+  {
+    "id": "Q40",
+    "category": "Top-N & Bottom-N Queries",
+    "question": "Find the top 3 states by total sales revenue.",
+    "expected_behavior": "Groups by state, sums sales, orders DESC, LIMIT 3.",
+    "expected_tables_columns": ["state", "sales"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "order_by": true,
+      "direction": "DESC",
+      "limit": 3
+    }
+  },
+  {
+    "id": "Q41",
+    "category": "Percentage & Ratio Calculations",
+    "question": "What is the profit margin percentage for each category?",
+    "expected_behavior": "Groups by category and calculates (SUM(profit) / SUM(sales)) * 100.",
+    "expected_tables_columns": ["category", "profit", "sales"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "expressions": ["SUM(profit) / SUM(sales)"]
+    }
+  },
+  {
+    "id": "Q42",
+    "category": "Percentage & Ratio Calculations",
+    "question": "What percentage of total orders had a discount applied?",
+    "expected_behavior": "Calculates count of discounted orders divided by total orders.",
+    "expected_tables_columns": ["discount", "order_id"],
+    "expected_query_characteristics": {
+      "expressions": ["COUNT / COUNT"]
+    }
+  },
+  {
+    "id": "Q43",
+    "category": "Percentage & Ratio Calculations",
+    "question": "What is the ratio of total quantity sold to total orders?",
+    "expected_behavior": "Calculates SUM(quantity) / COUNT(DISTINCT order_id).",
+    "expected_tables_columns": ["quantity", "order_id"],
+    "expected_query_characteristics": {
+      "expressions": ["SUM / COUNT"]
+    }
+  },
+  {
+    "id": "Q44",
+    "category": "Percentage & Ratio Calculations",
+    "question": "Calculate the average profit per unit sold by category.",
+    "expected_behavior": "Groups by category and computes SUM(profit) / SUM(quantity).",
+    "expected_tables_columns": ["category", "profit", "quantity"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "expressions": ["SUM(profit) / SUM(quantity)"]
+    }
+  },
+  {
+    "id": "Q45",
+    "category": "Percentage & Ratio Calculations",
+    "question": "What is the return or loss percentage across all sales?",
+    "expected_behavior": "Calculates (SUM(CASE WHEN profit < 0 THEN profit ELSE 0 END) / SUM(sales)) * 100 or loss ratio.",
+    "expected_tables_columns": ["profit", "sales"],
+    "expected_query_characteristics": {
+      "expressions": ["CASE WHEN", "SUM"]
+    }
+  },
+  {
+    "id": "Q46",
+    "category": "Comparisons & Conditional Aggregations",
+    "question": "Compare total revenue between the East and West regions.",
+    "expected_behavior": "Filters for East and West regions, groups by region, and calculates SUM(sales).",
+    "expected_tables_columns": ["region", "sales"],
+    "expected_query_characteristics": {
+      "where_clause": true,
+      "group_by": true,
+      "in_list": ["East", "West"]
+    }
+  },
+  {
+    "id": "Q47",
+    "category": "Comparisons & Conditional Aggregations",
+    "question": "Compare average order value between Corporate and Consumer segments.",
+    "expected_behavior": "Groups by segment (Corporate vs Consumer) and calculates AVG(sales).",
+    "expected_tables_columns": ["segment", "sales"],
+    "expected_query_characteristics": {
+      "group_by": true,
+      "aggregations": ["AVG"]
+    }
+  },
+  {
+    "id": "Q48",
+    "category": "Comparisons & Conditional Aggregations",
+    "question": "What is the profit breakdown for discounted vs non-discounted sales?",
+    "expected_behavior": "Groups by CASE WHEN discount > 0 THEN 'Discounted' ELSE 'Full Price' and sums profit.",
+    "expected_tables_columns": ["discount", "profit"],
+    "expected_query_characteristics": {
+      "case_statement": true,
+      "group_by": true
+    }
+  },
+  {
+    "id": "Q49",
+    "category": "Comparisons & Conditional Aggregations",
+    "question": "Compare total sales revenue across all 4 quarters.",
+    "expected_behavior": "Extracts quarter from order_date, groups by quarter, and calculates SUM(sales).",
+    "expected_tables_columns": ["order_date", "sales"],
+    "expected_query_characteristics": {
+      "date_trunc": "quarter",
+      "group_by": true
+    }
+  },
+  {
+    "id": "Q50",
+    "category": "Comparisons & Conditional Aggregations",
+    "question": "Which category generated more revenue: Furniture or Technology?",
+    "expected_behavior": "Filters for Furniture and Technology, groups by category, and calculates SUM(sales) ORDER BY sales DESC.",
+    "expected_tables_columns": ["category", "sales"],
+    "expected_query_characteristics": {
+      "where_clause": true,
+      "group_by": true,
+      "order_by": true
+    }
+  }
+]

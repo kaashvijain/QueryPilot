@@ -54,19 +54,19 @@ export default function QueryResult({ result }: QueryResultProps) {
         <div
           style={{
             marginBottom: "1.5rem",
-            padding: "0.85rem 1rem",
+            padding: "0.75rem 1rem",
             borderRadius: "var(--radius-md)",
             backgroundColor: "var(--error-bg)",
             border: "1px solid var(--error-border)",
             color: "var(--error-red)",
-            fontSize: "0.9rem",
+            fontSize: "0.85rem",
           }}
         >
           <strong>Query Error:</strong> {error_message || "Query execution failed."}
         </div>
       )}
 
-      {/* 1. Direct Analyst Answer (Primary Headline Output) */}
+      {/* 1. Direct Analyst Insight */}
       {analystAnswer && (
         <div style={{ marginBottom: "2rem" }}>
           <div
@@ -74,14 +74,14 @@ export default function QueryResult({ result }: QueryResultProps) {
               fontSize: "0.8rem",
               fontWeight: 600,
               color: "var(--text-secondary)",
-              marginBottom: "0.4rem",
+              marginBottom: "0.35rem",
             }}
           >
             Insight
           </div>
           <h3
             style={{
-              fontSize: "1.2rem",
+              fontSize: "1.15rem",
               fontWeight: 600,
               color: "var(--text-primary)",
               lineHeight: 1.5,
@@ -98,7 +98,7 @@ export default function QueryResult({ result }: QueryResultProps) {
         <ChartVisualization result={result} />
       </div>
 
-      {/* 3. Generated SQL (Collapsible Section) */}
+      {/* 3. Generated SQL (Collapsible Section with Compact Copy Icon) */}
       {sql && (
         <div style={{ marginBottom: "2.5rem", borderTop: "1px solid var(--border-subtle)", paddingTop: "1.25rem" }}>
           <div
@@ -138,23 +138,34 @@ export default function QueryResult({ result }: QueryResultProps) {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              {showSql ? "Hide Generated SQL" : "Show Generated SQL"}
+              {showSql ? "Generated SQL" : "Show Generated SQL"}
             </button>
 
             {showSql && (
               <button
                 type="button"
                 onClick={handleCopySql}
+                title={copied ? "Copied!" : "Copy SQL"}
                 style={{
+                  padding: "0.25rem 0.5rem",
                   fontSize: "0.75rem",
-                  fontWeight: 600,
-                  color: "var(--accent-blue)",
-                  backgroundColor: "transparent",
-                  border: "none",
+                  fontWeight: 500,
+                  color: copied ? "var(--success-green)" : "var(--text-secondary)",
+                  backgroundColor: "var(--bg-secondary)",
+                  border: "1px solid var(--border-subtle)",
+                  borderRadius: "var(--radius-sm)",
                   cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.3rem",
+                  transition: "all 0.15s ease",
                 }}
               >
-                {copied ? "Copied!" : "Copy SQL"}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                {copied ? "Copied" : "Copy"}
               </button>
             )}
           </div>
@@ -162,8 +173,8 @@ export default function QueryResult({ result }: QueryResultProps) {
           {showSql && (
             <pre
               style={{
-                backgroundColor: "#1c1917",
-                color: "#38bdf8",
+                backgroundColor: "var(--bg-secondary)",
+                color: "var(--text-primary)",
                 padding: "1rem 1.25rem",
                 borderRadius: "var(--radius-md)",
                 fontSize: "0.85rem",
@@ -172,7 +183,7 @@ export default function QueryResult({ result }: QueryResultProps) {
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
                 margin: 0,
-                border: "1px solid #292524",
+                border: "1px solid var(--border-subtle)",
               }}
             >
               <code>{sql}</code>
@@ -181,7 +192,7 @@ export default function QueryResult({ result }: QueryResultProps) {
         </div>
       )}
 
-      {/* 4. Data Output Table */}
+      {/* 4. Data Results Table */}
       {results && results.columns && results.columns.length > 0 && (
         <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "1.5rem" }}>
           <div
@@ -214,23 +225,27 @@ export default function QueryResult({ result }: QueryResultProps) {
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.85rem" }}>
               <thead>
                 <tr style={{ backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-subtle)" }}>
-                  {results.columns.map((col, idx) => (
-                    <th
-                      key={idx}
-                      style={{
-                        padding: "0.65rem 0.85rem",
-                        fontWeight: 600,
-                        color: "var(--text-primary)",
-                        whiteSpace: "nowrap",
-                        position: "sticky",
-                        top: 0,
-                        backgroundColor: "var(--bg-secondary)",
-                        zIndex: 1,
-                      }}
-                    >
-                      {col}
-                    </th>
-                  ))}
+                  {results.columns.map((col, idx) => {
+                    const isNum = results.rows.length > 0 && typeof results.rows[0][idx] === "number";
+                    return (
+                      <th
+                        key={idx}
+                        style={{
+                          padding: "0.65rem 0.85rem",
+                          fontWeight: 600,
+                          color: "var(--text-primary)",
+                          whiteSpace: "nowrap",
+                          position: "sticky",
+                          top: 0,
+                          backgroundColor: "var(--bg-secondary)",
+                          zIndex: 1,
+                          textAlign: isNum ? "right" : "left",
+                        }}
+                      >
+                        {col}
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -252,19 +267,25 @@ export default function QueryResult({ result }: QueryResultProps) {
                         backgroundColor: rIdx % 2 === 0 ? "var(--bg-primary)" : "var(--bg-secondary)",
                       }}
                     >
-                      {row.map((cell, cIdx) => (
-                        <td
-                          key={cIdx}
-                          style={{
-                            padding: "0.6rem 0.85rem",
-                            color: cell === null ? "var(--text-muted)" : "var(--text-primary)",
-                            fontStyle: cell === null ? "italic" : "normal",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {cell === null ? "NULL" : String(cell)}
-                        </td>
-                      ))}
+                      {row.map((cell, cIdx) => {
+                        const isNum = typeof cell === "number";
+                        const formattedCell =
+                          isNum ? cell.toLocaleString(undefined, { maximumFractionDigits: 2 }) : cell === null ? "NULL" : String(cell);
+                        return (
+                          <td
+                            key={cIdx}
+                            style={{
+                              padding: "0.6rem 0.85rem",
+                              color: cell === null ? "var(--text-muted)" : "var(--text-primary)",
+                              fontStyle: cell === null ? "italic" : "normal",
+                              whiteSpace: "nowrap",
+                              textAlign: isNum ? "right" : "left",
+                            }}
+                          >
+                            {formattedCell}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))
                 )}

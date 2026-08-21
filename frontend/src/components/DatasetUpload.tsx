@@ -107,19 +107,29 @@ export default function DatasetUpload({ onUploadSuccess }: DatasetUploadProps) {
   };
 
   return (
-    <div style={{ width: "100%", textAlign: "left" }}>
+    <div style={{ width: "100%", maxWidth: "640px", margin: "0 auto", textAlign: "left" }}>
+      {/* Header */}
+      <div style={{ marginBottom: "1.5rem", textAlign: "center" }}>
+        <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.02em", marginBottom: "0.25rem" }}>
+          Upload your data
+        </h2>
+        <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+          Turn questions into insights.
+        </p>
+      </div>
+
       {/* Upload Drag & Drop Zone */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         style={{
-          border: isDragging ? "2px dashed #2563eb" : "2px dashed #cbd5e1",
-          borderRadius: "12px",
-          padding: "2.5rem 1.5rem",
+          border: isDragging ? "1.5px dashed var(--accent-blue)" : "1.5px dashed var(--border-medium)",
+          borderRadius: "var(--radius-lg)",
+          padding: "3rem 1.5rem",
           textAlign: "center",
-          backgroundColor: isDragging ? "#eff6ff" : "#f8fafc",
-          transition: "all 0.2s ease-in-out",
+          backgroundColor: isDragging ? "var(--accent-blue-bg)" : "var(--bg-secondary)",
+          transition: "all 0.15s ease-in-out",
           cursor: "pointer",
         }}
         onClick={() => fileInputRef.current?.click()}
@@ -133,13 +143,11 @@ export default function DatasetUpload({ onUploadSuccess }: DatasetUploadProps) {
           id="csv-file-input"
         />
 
-        {/* Upload SVG Icon */}
         <svg
-          style={{ width: "40px", height: "40px", color: "#64748b", margin: "0 auto 0.5rem" }}
+          style={{ width: "36px", height: "36px", color: "var(--text-secondary)", margin: "0 auto 0.75rem" }}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
         >
           <path
             strokeLinecap="round"
@@ -149,10 +157,7 @@ export default function DatasetUpload({ onUploadSuccess }: DatasetUploadProps) {
           />
         </svg>
 
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#1e293b", marginBottom: "0.25rem" }}>
-          Upload your dataset
-        </h3>
-        <p style={{ fontSize: "0.875rem", color: "#64748b", marginBottom: "1rem" }}>
+        <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--text-primary)", marginBottom: "0.75rem" }}>
           Drag and drop your CSV file here, or click to browse
         </p>
 
@@ -163,96 +168,63 @@ export default function DatasetUpload({ onUploadSuccess }: DatasetUploadProps) {
             fileInputRef.current?.click();
           }}
           style={{
-            padding: "0.5rem 1rem",
-            fontSize: "0.875rem",
+            padding: "0.4rem 0.9rem",
+            fontSize: "0.825rem",
             fontWeight: 500,
-            color: "#0f172a",
-            backgroundColor: "#ffffff",
-            border: "1px solid #cbd5e1",
-            borderRadius: "6px",
+            color: "var(--text-primary)",
+            backgroundColor: "var(--bg-primary)",
+            border: "1px solid var(--border-medium)",
+            borderRadius: "var(--radius-sm)",
             cursor: "pointer",
-            boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
           }}
         >
-          Choose CSV File
+          Select CSV
         </button>
 
         {file && (
           <div
             style={{
               marginTop: "1rem",
-              fontSize: "0.875rem",
+              fontSize: "0.825rem",
               fontWeight: 500,
-              color: "#2563eb",
-              backgroundColor: "#eff6ff",
-              padding: "0.5rem",
-              borderRadius: "6px",
-              display: "flex",
+              color: "var(--accent-blue)",
+              backgroundColor: "var(--accent-blue-bg)",
+              padding: "0.4rem 0.75rem",
+              borderRadius: "var(--radius-sm)",
+              display: "inline-flex",
               alignItems: "center",
-              justifyContent: "center",
               gap: "0.4rem",
             }}
           >
-            <svg
-              style={{ width: "16px", height: "16px", flexShrink: 0 }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
             Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
           </div>
         )}
       </div>
 
       {/* Upload Action Button */}
-      <div style={{ marginTop: "1rem" }}>
+      <div style={{ marginTop: "1.25rem" }}>
         <button
           id="upload-button"
           onClick={handleUpload}
           disabled={!file || isUploading}
           style={{
             width: "100%",
-            padding: "0.75rem",
-            fontSize: "0.95rem",
+            padding: "0.7rem",
+            fontSize: "0.9rem",
             fontWeight: 600,
-            color: "#ffffff",
-            backgroundColor: !file || isUploading ? "#94a3b8" : "#0f172a",
+            color: "var(--bg-primary)",
+            backgroundColor: !file || isUploading ? "var(--text-muted)" : "var(--text-primary)",
             border: "none",
-            borderRadius: "8px",
+            borderRadius: "var(--radius-md)",
             cursor: !file || isUploading ? "not-allowed" : "pointer",
-            transition: "background-color 0.2s ease",
+            transition: "all 0.15s ease",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             gap: "0.5rem",
           }}
         >
-          {isUploading ? (
-            <>
-              <span
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  border: "2px solid #ffffff",
-                  borderTop: "2px solid transparent",
-                  borderRadius: "50%",
-                  animation: "spin 0.8s linear infinite",
-                  display: "inline-block",
-                }}
-              />
-              Ingesting CSV Dataset...
-            </>
-          ) : (
-            "Upload Dataset"
-          )}
+          {isUploading ? "Uploading CSV Dataset..." : "Upload Dataset"}
         </button>
       </div>
 
@@ -261,32 +233,15 @@ export default function DatasetUpload({ onUploadSuccess }: DatasetUploadProps) {
         <div
           style={{
             marginTop: "1rem",
-            padding: "0.85rem 1rem",
-            borderRadius: "8px",
-            backgroundColor: "#fef2f2",
-            border: "1px solid #fecaca",
-            color: "#991b1b",
-            fontSize: "0.9rem",
+            padding: "0.75rem 1rem",
+            borderRadius: "var(--radius-md)",
+            backgroundColor: "var(--error-bg)",
+            border: "1px solid var(--error-border)",
+            color: "var(--error-red)",
+            fontSize: "0.85rem",
             fontWeight: 500,
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
           }}
         >
-          <svg
-            style={{ width: "18px", height: "18px", color: "#991b1b", flexShrink: 0 }}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
           {error}
         </div>
       )}
@@ -295,89 +250,22 @@ export default function DatasetUpload({ onUploadSuccess }: DatasetUploadProps) {
       {uploadedDataset && (
         <div
           style={{
-            marginTop: "1.5rem",
-            padding: "1.25rem",
-            borderRadius: "10px",
-            backgroundColor: "#f0fdf4",
-            border: "1px solid #bbf7d0",
-            color: "#166534",
+            marginTop: "1.25rem",
+            padding: "1rem",
+            borderRadius: "var(--radius-md)",
+            backgroundColor: "var(--success-bg)",
+            border: "1px solid var(--success-border)",
+            color: "var(--success-green)",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <svg
-                style={{ width: "20px", height: "20px", color: "#166534", flexShrink: 0 }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <h4 style={{ fontSize: "1rem", fontWeight: 600 }}>Dataset Loaded Successfully</h4>
-            </div>
-            <span
-              style={{
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                backgroundColor: "#dcfce7",
-                color: "#15803d",
-                padding: "0.2rem 0.6rem",
-                borderRadius: "9999px",
-              }}
-            >
-              ID: {uploadedDataset.dataset_id.slice(0, 8)}...
-            </span>
+          <div style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.25rem" }}>
+            Dataset Loaded Successfully
           </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: "0.75rem",
-              marginTop: "0.5rem",
-            }}
-          >
-            <div style={{ backgroundColor: "#ffffff", padding: "0.75rem", borderRadius: "6px", border: "1px solid #dcfce7" }}>
-              <div style={{ fontSize: "0.75rem", color: "#65a30d", textTransform: "uppercase", fontWeight: 600 }}>File Name</div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "#14532d", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {uploadedDataset.filename}
-              </div>
-            </div>
-
-            <div style={{ backgroundColor: "#ffffff", padding: "0.75rem", borderRadius: "6px", border: "1px solid #dcfce7" }}>
-              <div style={{ fontSize: "0.75rem", color: "#65a30d", textTransform: "uppercase", fontWeight: 600 }}>Rows</div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "#14532d" }}>
-                {uploadedDataset.row_count.toLocaleString()}
-              </div>
-            </div>
-
-            <div style={{ backgroundColor: "#ffffff", padding: "0.75rem", borderRadius: "6px", border: "1px solid #dcfce7" }}>
-              <div style={{ fontSize: "0.75rem", color: "#65a30d", textTransform: "uppercase", fontWeight: 600 }}>Columns</div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "#14532d" }}>
-                {uploadedDataset.column_count}
-              </div>
-            </div>
+          <div style={{ fontSize: "0.825rem" }}>
+            <strong>{uploadedDataset.filename}</strong> · {uploadedDataset.row_count.toLocaleString()} rows · {uploadedDataset.column_count} columns
           </div>
         </div>
       )}
-
-      {/* Inline Keyframes */}
-      <style jsx>{`
-        @keyframes spin {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
     </div>
   );
 }

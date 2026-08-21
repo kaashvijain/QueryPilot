@@ -99,14 +99,14 @@ export default function QueryInput({
     }
   };
 
-  // State 2: Collapsed Context Bar (Post-Analysis State)
+  // State 2: Collapsed Context Header (Post-Analysis Workspace State)
   if (isCollapsed && !isProcessing) {
     return (
       <div
         className="workspace-fade-in"
         style={{
           width: "100%",
-          padding: "0.85rem 1.25rem",
+          padding: "0.75rem 1.25rem",
           backgroundColor: "var(--bg-secondary)",
           borderRadius: "var(--radius-md)",
           border: "1px solid var(--border-subtle)",
@@ -115,11 +115,11 @@ export default function QueryInput({
           justifyContent: "space-between",
           flexWrap: "wrap",
           gap: "0.75rem",
-          marginBottom: "1.5rem",
+          marginBottom: "1.25rem",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flex: "1 1 300px" }}>
-          <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", fontWeight: 500 }}>
+          <span style={{ fontSize: "0.825rem", color: "var(--text-secondary)", fontWeight: 500 }}>
             Question:
           </span>
           <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--text-primary)" }}>
@@ -134,15 +134,12 @@ export default function QueryInput({
             style={{
               padding: "0.35rem 0.75rem",
               fontSize: "0.8rem",
-              fontWeight: 600,
+              fontWeight: 500,
               color: "var(--text-primary)",
               backgroundColor: "var(--bg-primary)",
               border: "1px solid var(--border-medium)",
               borderRadius: "var(--radius-sm)",
               cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.3rem",
             }}
           >
             Edit question
@@ -157,9 +154,9 @@ export default function QueryInput({
             style={{
               padding: "0.35rem 0.75rem",
               fontSize: "0.8rem",
-              fontWeight: 600,
-              color: "#ffffff",
-              backgroundColor: "var(--accent-primary)",
+              fontWeight: 500,
+              color: "var(--bg-primary)",
+              backgroundColor: "var(--text-primary)",
               border: "none",
               borderRadius: "var(--radius-sm)",
               cursor: "pointer",
@@ -172,24 +169,24 @@ export default function QueryInput({
     );
   }
 
-  // State 1: Active Hero Query Input State (Before Analysis / Editing Query)
+  // State 1: Active Hero Query Input State
   return (
     <div className="workspace-fade-in" style={{ width: "100%", textAlign: "left", marginBottom: "2rem" }}>
       {/* Hero Heading & Subtitle */}
-      <div style={{ marginBottom: "1.25rem" }}>
+      <div style={{ marginBottom: "1rem" }}>
         <h2
           style={{
             fontSize: "1.5rem",
             fontWeight: 700,
             color: "var(--text-primary)",
             letterSpacing: "-0.01em",
-            marginBottom: "0.35rem",
+            marginBottom: "0.25rem",
           }}
         >
           Ask your data anything
         </h2>
-        <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
-          Query your dataset using natural language. QueryPilot will generate, validate, and execute the SQL for you.
+        <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+          Explore your data in plain English.
         </p>
       </div>
 
@@ -201,10 +198,9 @@ export default function QueryInput({
           borderRadius: "var(--radius-md)",
           border: "1px solid var(--border-medium)",
           padding: "1rem 1.25rem",
-          boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
         }}
       >
-        <div style={{ position: "relative" }}>
+        <div>
           <textarea
             value={question}
             onChange={(e) => {
@@ -221,19 +217,18 @@ export default function QueryInput({
             rows={3}
             style={{
               width: "100%",
-              padding: "0.25rem 0.25rem 2rem 0.25rem",
-              fontSize: "1rem",
+              fontSize: "0.95rem",
               color: "var(--text-primary)",
               backgroundColor: "transparent",
               border: "none",
-              resize: "vertical",
+              resize: "none",
               outline: "none",
               fontFamily: "inherit",
               cursor: !datasetId || isProcessing ? "not-allowed" : "text",
             }}
           />
 
-          {/* Bottom Control Bar inside Textarea Container */}
+          {/* Bottom Control Bar */}
           <div
             style={{
               display: "flex",
@@ -253,18 +248,15 @@ export default function QueryInput({
               onClick={() => handleAnalyze()}
               disabled={!datasetId || isProcessing || !question.trim()}
               style={{
-                padding: "0.5rem 1.25rem",
-                fontSize: "0.9rem",
+                padding: "0.45rem 1.15rem",
+                fontSize: "0.85rem",
                 fontWeight: 600,
-                color: "#ffffff",
-                backgroundColor: !datasetId || isProcessing || !question.trim() ? "var(--text-muted)" : "var(--accent-primary)",
+                color: "var(--bg-primary)",
+                backgroundColor: !datasetId || isProcessing || !question.trim() ? "var(--text-muted)" : "var(--text-primary)",
                 border: "none",
                 borderRadius: "var(--radius-sm)",
                 cursor: !datasetId || isProcessing || !question.trim() ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.4rem",
-                transition: "background-color 0.15s ease",
+                transition: "all 0.15s ease",
               }}
             >
               {isProcessing ? "Analyzing..." : "Analyze"}
@@ -277,28 +269,28 @@ export default function QueryInput({
       {isProcessing && (
         <div
           style={{
-            marginTop: "1.25rem",
-            padding: "1rem 1.25rem",
+            marginTop: "1rem",
+            padding: "0.85rem 1rem",
             backgroundColor: "var(--bg-secondary)",
             borderRadius: "var(--radius-md)",
             border: "1px solid var(--border-subtle)",
           }}
         >
-          <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+          <div style={{ fontSize: "0.825rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.4rem" }}>
             Analyzing your data
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.825rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.8rem" }}>
             <div style={{ color: loadingStepIdx >= 0 ? "var(--success-green)" : "var(--text-muted)" }}>
               {loadingStepIdx > 0 ? "✓" : "●"} Understanding your question
             </div>
             <div style={{ color: loadingStepIdx >= 1 ? (loadingStepIdx > 1 ? "var(--success-green)" : "var(--text-primary)") : "var(--text-muted)" }}>
-              {loadingStepIdx > 1 ? "✓" : loadingStepIdx === 1 ? "●" : "○"} Generating schema-aware SQL
+              {loadingStepIdx > 1 ? "✓" : loadingStepIdx === 1 ? "●" : "○"} Generating SQL
             </div>
             <div style={{ color: loadingStepIdx >= 2 ? (loadingStepIdx > 2 ? "var(--success-green)" : "var(--text-primary)") : "var(--text-muted)" }}>
-              {loadingStepIdx > 2 ? "✓" : loadingStepIdx === 2 ? "●" : "○"} Running DuckDB query
+              {loadingStepIdx > 2 ? "✓" : loadingStepIdx === 2 ? "●" : "○"} Running analysis
             </div>
             <div style={{ color: loadingStepIdx >= 3 ? "var(--text-primary)" : "var(--text-muted)" }}>
-              {loadingStepIdx === 3 ? "●" : "○"} Preparing insights & chart
+              {loadingStepIdx === 3 ? "●" : "○"} Preparing insights
             </div>
           </div>
         </div>
@@ -309,7 +301,7 @@ export default function QueryInput({
         <div
           style={{
             marginTop: "1rem",
-            padding: "0.85rem 1rem",
+            padding: "0.75rem 1rem",
             borderRadius: "var(--radius-md)",
             backgroundColor: "var(--error-bg)",
             border: "1px solid var(--error-border)",
@@ -321,15 +313,15 @@ export default function QueryInput({
         </div>
       )}
 
-      {/* Horizontally Scrollable Suggested Question Cards */}
+      {/* Suggested Question Cards */}
       {datasetId && !isProcessing && (
-        <div style={{ marginTop: "1.5rem" }}>
+        <div style={{ marginTop: "1.25rem" }}>
           <div
             style={{
               fontSize: "0.8rem",
-              fontWeight: 600,
+              fontWeight: 500,
               color: "var(--text-secondary)",
-              marginBottom: "0.6rem",
+              marginBottom: "0.5rem",
             }}
           >
             Try asking
@@ -337,8 +329,9 @@ export default function QueryInput({
 
           <div className="horizontal-scroll-container">
             {SUGGESTED_QUESTIONS.map((item, idx) => (
-              <div
+              <button
                 key={idx}
+                type="button"
                 className="horizontal-scroll-card interactive-hover"
                 onClick={() => {
                   setQuestion(item.question);
@@ -346,29 +339,23 @@ export default function QueryInput({
                   handleAnalyze(item.question);
                 }}
                 style={{
-                  width: "230px",
-                  padding: "0.85rem 1rem",
+                  padding: "0.45rem 0.85rem",
                   backgroundColor: "var(--bg-primary)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-medium)",
+                  borderRadius: "var(--radius-full)",
+                  fontSize: "0.825rem",
+                  color: "var(--text-primary)",
+                  fontWeight: 500,
                   cursor: "pointer",
-                  userSelect: "none",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  gap: "0.5rem",
+                  whiteSpace: "nowrap",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
                 }}
               >
-                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--accent-blue)" }}>
-                  {item.label}
-                </div>
-                <p style={{ fontSize: "0.825rem", color: "var(--text-primary)", fontWeight: 500, lineHeight: 1.35 }}>
-                  {item.question}
-                </p>
-                <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", alignSelf: "flex-end", fontWeight: 600 }}>
-                  Run →
-                </span>
-              </div>
+                <span>{item.question}</span>
+                <span style={{ color: "var(--text-secondary)" }}>→</span>
+              </button>
             ))}
           </div>
         </div>

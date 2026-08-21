@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 
-interface ColumnSchema {
+export interface ColumnSchema {
   name: string;
   type: string;
 }
 
-interface DatasetSchemaResponse {
+export interface DatasetSchemaResponse {
   dataset_id: string;
   table_name: string;
   row_count: number;
@@ -16,11 +16,12 @@ interface DatasetSchemaResponse {
 
 interface DatasetSchemaProps {
   datasetId: string;
+  compactMode?: boolean;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export default function DatasetSchema({ datasetId }: DatasetSchemaProps) {
+export default function DatasetSchema({ datasetId, compactMode = false }: DatasetSchemaProps) {
   const [schema, setSchema] = useState<DatasetSchemaResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,15 +58,15 @@ export default function DatasetSchema({ datasetId }: DatasetSchemaProps) {
       t.includes("DECIMAL") ||
       t.includes("NUMBER")
     ) {
-      return { bg: "#ecfdf5", color: "#047857", border: "#a7f3d0" }; // Green
+      return { bg: "var(--success-bg)", color: "var(--success-green)", border: "var(--success-border)" };
     }
     if (t.includes("DATE") || t.includes("TIME")) {
-      return { bg: "#f5f3ff", color: "#6d28d9", border: "#ddd6fe" }; // Purple
+      return { bg: "#f5f3ff", color: "#6d28d9", border: "#ddd6fe" };
     }
     if (t.includes("BOOL")) {
-      return { bg: "#fff7ed", color: "#c2410c", border: "#ffedd5" }; // Orange
+      return { bg: "#fff7ed", color: "#c2410c", border: "#ffedd5" };
     }
-    return { bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe" }; // Blue default (VARCHAR/TEXT)
+    return { bg: "var(--accent-blue-bg)", color: "var(--accent-blue)", border: "var(--accent-blue-border)" };
   };
 
   if (isLoading) {
@@ -73,37 +74,16 @@ export default function DatasetSchema({ datasetId }: DatasetSchemaProps) {
       <div
         style={{
           width: "100%",
-          padding: "2.5rem 1.5rem",
-          backgroundColor: "#ffffff",
-          borderRadius: "12px",
-          border: "1px solid #e2e8f0",
+          padding: compactMode ? "1.5rem" : "2.5rem 1.5rem",
+          backgroundColor: "var(--bg-primary)",
+          borderRadius: "var(--radius-md)",
+          border: "1px solid var(--border-subtle)",
           textAlign: "center",
         }}
       >
-        <div
-          style={{
-            width: "24px",
-            height: "24px",
-            border: "3px solid #cbd5e1",
-            borderTop: "3px solid #0f172a",
-            borderRadius: "50%",
-            animation: "spin 0.8s linear infinite",
-            margin: "0 auto 0.75rem",
-          }}
-        />
-        <p style={{ fontSize: "0.9rem", color: "#64748b", fontWeight: 500 }}>
+        <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 500 }}>
           Loading dataset schema...
         </p>
-        <style jsx>{`
-          @keyframes spin {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
-          }
-        `}</style>
       </div>
     );
   }
@@ -113,30 +93,14 @@ export default function DatasetSchema({ datasetId }: DatasetSchemaProps) {
       <div
         style={{
           width: "100%",
-          padding: "1rem",
-          backgroundColor: "#fef2f2",
-          border: "1px solid #fecaca",
-          borderRadius: "10px",
-          color: "#991b1b",
-          fontSize: "0.9rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem",
+          padding: "0.85rem 1rem",
+          backgroundColor: "var(--error-bg)",
+          border: "1px solid var(--error-border)",
+          borderRadius: "var(--radius-md)",
+          color: "var(--error-red)",
+          fontSize: "0.85rem",
         }}
       >
-        <svg
-          style={{ width: "18px", height: "18px", color: "#991b1b", flexShrink: 0 }}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
-        </svg>
         {error}
       </div>
     );
@@ -148,111 +112,60 @@ export default function DatasetSchema({ datasetId }: DatasetSchemaProps) {
     <div
       style={{
         width: "100%",
-        backgroundColor: "#ffffff",
-        borderRadius: "12px",
-        border: "1px solid #e2e8f0",
-        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)",
+        backgroundColor: "var(--bg-primary)",
+        borderRadius: "var(--radius-md)",
+        border: "1px solid var(--border-subtle)",
         overflow: "hidden",
         textAlign: "left",
       }}
     >
-      {/* Schema Card Header */}
-      <div
-        style={{
-          padding: "1.25rem 1.5rem",
-          backgroundColor: "#f8fafc",
-          borderBottom: "1px solid #e2e8f0",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <svg
-            style={{ width: "20px", height: "20px", color: "#0f172a", flexShrink: 0 }}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.75}
-              d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
-            />
-          </svg>
-          <div>
-            <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#0f172a" }}>
-              Detected Dataset Schema
-            </h3>
-            <p style={{ fontSize: "0.8rem", color: "#64748b" }}>
-              Table:{" "}
-              <code
-                style={{
-                  backgroundColor: "#e2e8f0",
-                  padding: "0.1rem 0.3rem",
-                  borderRadius: "4px",
-                }}
-              >
-                {schema.table_name}
-              </code>
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <span
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              backgroundColor: "#f1f5f9",
-              color: "#334155",
-              padding: "0.25rem 0.6rem",
-              borderRadius: "6px",
-              border: "1px solid #cbd5e1",
-            }}
-          >
-            {schema.row_count.toLocaleString()} Rows
-          </span>
-          <span
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              backgroundColor: "#f1f5f9",
-              color: "#334155",
-              padding: "0.25rem 0.6rem",
-              borderRadius: "6px",
-              border: "1px solid #cbd5e1",
-            }}
-          >
-            {schema.columns.length} Columns
-          </span>
-        </div>
-      </div>
-
-      {/* Columns List / Table */}
-      <div style={{ padding: "0.5rem 1.5rem 1.25rem" }}>
+      {/* Schema Header */}
+      {!compactMode && (
         <div
           style={{
-            fontSize: "0.8rem",
-            fontWeight: 600,
-            color: "#94a3b8",
-            textTransform: "uppercase",
-            margin: "1rem 0 0.5rem",
-            letterSpacing: "0.05em",
+            padding: "1rem 1.25rem",
+            backgroundColor: "var(--bg-secondary)",
+            borderBottom: "1px solid var(--border-subtle)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
-          Columns & Data Types
+          <div>
+            <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+              Dataset Schema
+            </h3>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.1rem" }}>
+              Table: <code>{schema.table_name}</code>
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <span
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                backgroundColor: "var(--bg-tertiary)",
+                color: "var(--text-secondary)",
+                padding: "0.2rem 0.5rem",
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              {schema.columns.length} Columns
+            </span>
+          </div>
         </div>
+      )}
 
+      {/* Columns List */}
+      <div style={{ padding: compactMode ? "0.75rem" : "1rem 1.25rem" }}>
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.4rem",
-            maxHeight: "320px",
-            overflowY: "auto",
-            paddingRight: "0.25rem",
+            display: "grid",
+            gridTemplateColumns: compactMode ? "repeat(auto-fill, minmax(220px, 1fr))" : "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: "0.5rem",
+            maxHeight: compactMode ? "280px" : "none",
+            overflowY: compactMode ? "auto" : "visible",
           }}
         >
           {schema.columns.map((col, idx) => {
@@ -264,40 +177,25 @@ export default function DatasetSchema({ datasetId }: DatasetSchemaProps) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "0.6rem 0.85rem",
-                  borderRadius: "8px",
-                  backgroundColor: idx % 2 === 0 ? "#f8fafc" : "#ffffff",
-                  border: "1px solid #f1f5f9",
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "var(--radius-sm)",
+                  backgroundColor: "var(--bg-secondary)",
+                  border: "1px solid var(--border-subtle)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <svg
-                    style={{ width: "14px", height: "14px", color: "#94a3b8" }}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-                    />
-                  </svg>
-                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#1e293b" }}>
-                    {col.name}
-                  </span>
-                </div>
+                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                  {col.name}
+                </span>
 
                 <span
                   style={{
-                    fontSize: "0.75rem",
+                    fontSize: "0.7rem",
                     fontWeight: 600,
-                    fontFamily: "monospace",
+                    fontFamily: "var(--font-mono)",
                     backgroundColor: badgeStyle.bg,
                     color: badgeStyle.color,
                     border: `1px solid ${badgeStyle.border}`,
-                    padding: "0.15rem 0.5rem",
+                    padding: "0.1rem 0.4rem",
                     borderRadius: "4px",
                   }}
                 >

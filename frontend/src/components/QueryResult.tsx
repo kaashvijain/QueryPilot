@@ -30,6 +30,7 @@ interface QueryResultProps {
 
 export default function QueryResult({ result }: QueryResultProps) {
   const [copied, setCopied] = useState(false);
+  const [showSql, setShowSql] = useState(false);
 
   if (!result) return null;
 
@@ -41,212 +42,210 @@ export default function QueryResult({ result }: QueryResultProps) {
     }
   };
 
-  const { sql, attempts, results, success, error_message } = result;
+  const { sql, attempts, results, success, error_message, insight, explanation } = result;
   const isSuccess = success !== undefined ? success : (results !== undefined && results.rows !== undefined);
   const hasError = isSuccess === false || Boolean(error_message);
+  const analystAnswer = insight || explanation;
 
   return (
-    <div
-      style={{
-        width: "100%",
-        backgroundColor: "#ffffff",
-        borderRadius: "12px",
-        border: "1px solid #e2e8f0",
-        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05)",
-        overflow: "hidden",
-        textAlign: "left",
-      }}
-    >
-      {/* Header Bar */}
+    <div style={{ width: "100%", marginTop: "2rem", textAlign: "left" }}>
+      {/* Result Metadata Header Line */}
       <div
         style={{
-          padding: "1rem 1.5rem",
-          backgroundColor: "#f8fafc",
-          borderBottom: "1px solid #e2e8f0",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          paddingBottom: "0.75rem",
+          marginBottom: "1.5rem",
+          borderBottom: "1px solid var(--border-subtle)",
           flexWrap: "wrap",
-          gap: "0.75rem",
+          gap: "0.5rem",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <svg
-            style={{ width: "20px", height: "20px", color: isSuccess ? "#166534" : "#991b1b", flexShrink: 0 }}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#0f172a" }}>
-            Query Results
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+            Analysis Result
           </h3>
         </div>
 
-        {/* Metadata Badges */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          {/* Attempts Badge */}
-          <span
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              backgroundColor: attempts > 1 ? "#fef3c7" : "#f1f5f9",
-              color: attempts > 1 ? "#92400e" : "#334155",
-              border: `1px solid ${attempts > 1 ? "#fde68a" : "#cbd5e1"}`,
-              padding: "0.2rem 0.6rem",
-              borderRadius: "6px",
-            }}
-          >
-            {attempts === 1 ? "1 Attempt" : `Self-Corrected (${attempts} Attempts)`}
-          </span>
+        {/* Badges */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          {attempts > 1 && (
+            <span
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                backgroundColor: "#fef3c7",
+                color: "#92400e",
+                border: "1px solid #fde68a",
+                padding: "0.15rem 0.5rem",
+                borderRadius: "var(--radius-sm)",
+              }}
+            >
+              Self-Corrected ({attempts} Attempts)
+            </span>
+          )}
 
-          {/* Execution Time */}
           {results?.execution_time_ms !== undefined && (
             <span
               style={{
                 fontSize: "0.75rem",
                 fontWeight: 600,
-                backgroundColor: "#f1f5f9",
-                color: "#334155",
-                border: "1px solid #cbd5e1",
-                padding: "0.2rem 0.6rem",
-                borderRadius: "6px",
+                backgroundColor: "var(--bg-secondary)",
+                color: "var(--text-secondary)",
+                border: "1px solid var(--border-subtle)",
+                padding: "0.15rem 0.5rem",
+                borderRadius: "var(--radius-sm)",
               }}
             >
-              {results.execution_time_ms.toFixed(2)} ms
+              {results.execution_time_ms.toFixed(1)} ms
             </span>
           )}
 
-          {/* Total Rows */}
           {results?.row_count !== undefined && (
             <span
               style={{
                 fontSize: "0.75rem",
                 fontWeight: 600,
-                backgroundColor: "#e0f2fe",
-                color: "#0369a1",
-                border: "1px solid #bae6fd",
-                padding: "0.2rem 0.6rem",
-                borderRadius: "6px",
+                backgroundColor: "var(--bg-secondary)",
+                color: "var(--text-secondary)",
+                border: "1px solid var(--border-subtle)",
+                padding: "0.15rem 0.5rem",
+                borderRadius: "var(--radius-sm)",
               }}
             >
               {results.row_count.toLocaleString()} {results.row_count === 1 ? "Row" : "Rows"}
             </span>
           )}
-
-          {/* Visualization Mode Badge */}
-          <span
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              backgroundColor: "#f0fdf4",
-              color: "#166534",
-              border: "1px solid #bbf7d0",
-              padding: "0.2rem 0.6rem",
-              borderRadius: "6px",
-            }}
-          >
-            Chart: {(result.chart?.type || result.chart_type || "table").toUpperCase()}
-          </span>
         </div>
       </div>
 
-      <div style={{ padding: "1.25rem 1.5rem" }}>
-        {/* Error Banner */}
-        {hasError && (
+      {/* Error Message */}
+      {hasError && (
+        <div
+          style={{
+            marginBottom: "1.5rem",
+            padding: "0.85rem 1rem",
+            borderRadius: "var(--radius-md)",
+            backgroundColor: "var(--error-bg)",
+            border: "1px solid var(--error-border)",
+            color: "var(--error-red)",
+            fontSize: "0.9rem",
+          }}
+        >
+          <strong>Execution Error:</strong> {error_message || "Query execution failed."}
+        </div>
+      )}
+
+      {/* 1. Analyst Answer / Key Insight (Elegantly Styled Analyst Response) */}
+      {analystAnswer && (
+        <div
+          style={{
+            marginBottom: "2rem",
+            paddingLeft: "1.25rem",
+            borderLeft: "3px solid var(--accent-blue)",
+          }}
+        >
           <div
             style={{
-              marginBottom: "1.25rem",
-              padding: "0.85rem 1rem",
-              borderRadius: "8px",
-              backgroundColor: "#fef2f2",
-              border: "1px solid #fecaca",
-              color: "#991b1b",
-              fontSize: "0.9rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              color: "var(--accent-blue)",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              marginBottom: "0.3rem",
             }}
           >
-            <svg
-              style={{ width: "18px", height: "18px", color: "#991b1b", flexShrink: 0 }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <div>
-              <strong>Execution Error:</strong> {error_message || "Query execution failed after self-correction retries."}
-            </div>
+            Analyst Insight
           </div>
-        )}
+          <p
+            style={{
+              fontSize: "1.05rem",
+              fontWeight: 500,
+              color: "var(--text-primary)",
+              lineHeight: 1.6,
+            }}
+          >
+            {analystAnswer}
+          </p>
+        </div>
+      )}
 
-        {/* Generated SQL Code Box */}
-        {sql && (
-          <div style={{ marginBottom: "1.5rem" }}>
-            <div
+      {/* 2. Chart Visualization */}
+      <div style={{ marginBottom: "2rem" }}>
+        <ChartVisualization result={result} />
+      </div>
+
+      {/* 3. Generated SQL (Collapsible Section) */}
+      {sql && (
+        <div style={{ marginBottom: "2rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "0.5rem",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowSql(!showSql)}
               style={{
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                color: "var(--text-secondary)",
+                backgroundColor: "transparent",
+                border: "none",
+                cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "0.4rem",
+                gap: "0.3rem",
+                padding: 0,
               }}
             >
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Generated SQL
-              </span>
+              <svg
+                style={{
+                  width: "14px",
+                  height: "14px",
+                  transform: showSql ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.15s ease",
+                }}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              {showSql ? "Hide Generated SQL" : "Show Generated SQL"}
+            </button>
+
+            {showSql && (
               <button
                 type="button"
                 onClick={handleCopySql}
                 style={{
                   fontSize: "0.75rem",
                   fontWeight: 600,
-                  color: "#3b82f6",
+                  color: "var(--accent-blue)",
                   backgroundColor: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.3rem",
                 }}
               >
-                <svg
-                  style={{ width: "14px", height: "14px" }}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  />
-                </svg>
                 {copied ? "Copied!" : "Copy SQL"}
               </button>
-            </div>
+            )}
+          </div>
 
+          {showSql && (
             <pre
               style={{
                 backgroundColor: "#0f172a",
                 color: "#38bdf8",
                 padding: "1rem 1.25rem",
-                borderRadius: "8px",
-                fontSize: "0.875rem",
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                borderRadius: "var(--radius-md)",
+                fontSize: "0.85rem",
+                fontFamily: "var(--font-mono)",
                 overflowX: "auto",
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
@@ -256,129 +255,97 @@ export default function QueryResult({ result }: QueryResultProps) {
             >
               <code>{sql}</code>
             </pre>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
-        {/* Key Insight Card */}
-        {(result.insight || result.explanation) && (
+      {/* 4. Data Output Table */}
+      {results && results.columns && results.columns.length > 0 && (
+        <div>
           <div
             style={{
-              marginBottom: "1.5rem",
-              padding: "1rem 1.25rem",
-              backgroundColor: "#f0f9ff",
-              border: "1px solid #bae6fd",
-              borderRadius: "8px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "0.75rem",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              color: "var(--text-muted)",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              marginBottom: "0.6rem",
             }}
           >
-            <svg
-              style={{ width: "20px", height: "20px", color: "#0284c7", flexShrink: 0, marginTop: "0.1rem" }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 01-2 2h-4a2 2 0 01-2-2v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-              />
-            </svg>
-            <div>
-              <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.2rem" }}>
-                Key Insight
-              </div>
-              <div style={{ fontSize: "0.9rem", color: "#0f172a", lineHeight: 1.5, fontWeight: 500 }}>
-                {result.insight || result.explanation}
-              </div>
-            </div>
+            Data Output Table ({results.row_count.toLocaleString()} Rows)
           </div>
-        )}
 
-        {/* Chart Visualization */}
-        <ChartVisualization result={result} />
-
-        {/* Results Table */}
-        {results && results.columns && results.columns.length > 0 && (
-          <div>
-            <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
-              Data Output Table ({results.row_count.toLocaleString()} Rows)
-            </div>
-
-            <div
-              style={{
-                overflowX: "auto",
-                borderRadius: "8px",
-                border: "1px solid #e2e8f0",
-                maxHeight: "400px",
-                overflowY: "auto",
-              }}
-            >
-              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
-                <thead>
-                  <tr style={{ backgroundColor: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-                    {results.columns.map((col, idx) => (
-                      <th
-                        key={idx}
-                        style={{
-                          padding: "0.75rem 1rem",
-                          fontWeight: 700,
-                          color: "#1e293b",
-                          whiteSpace: "nowrap",
-                          position: "sticky",
-                          top: 0,
-                          backgroundColor: "#f8fafc",
-                          zIndex: 1,
-                        }}
-                      >
-                        {col}
-                      </th>
-                    ))}
+          <div
+            style={{
+              overflowX: "auto",
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--border-subtle)",
+              maxHeight: "400px",
+              overflowY: "auto",
+            }}
+          >
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
+              <thead>
+                <tr style={{ backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-subtle)" }}>
+                  {results.columns.map((col, idx) => (
+                    <th
+                      key={idx}
+                      style={{
+                        padding: "0.75rem 1rem",
+                        fontWeight: 700,
+                        color: "var(--text-primary)",
+                        whiteSpace: "nowrap",
+                        position: "sticky",
+                        top: 0,
+                        backgroundColor: "var(--bg-secondary)",
+                        zIndex: 1,
+                      }}
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {results.rows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={results.columns.length}
+                      style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}
+                    >
+                      Query executed successfully, but returned 0 matching rows.
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {results.rows.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={results.columns.length}
-                        style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}
-                      >
-                        Query executed successfully, but returned 0 matching rows.
-                      </td>
+                ) : (
+                  results.rows.map((row, rIdx) => (
+                    <tr
+                      key={rIdx}
+                      style={{
+                        borderBottom: rIdx < results.rows.length - 1 ? "1px solid var(--border-subtle)" : "none",
+                        backgroundColor: rIdx % 2 === 0 ? "var(--bg-primary)" : "var(--bg-secondary)",
+                      }}
+                    >
+                      {row.map((cell, cIdx) => (
+                        <td
+                          key={cIdx}
+                          style={{
+                            padding: "0.65rem 1rem",
+                            color: cell === null ? "var(--text-muted)" : "var(--text-primary)",
+                            fontStyle: cell === null ? "italic" : "normal",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {cell === null ? "NULL" : String(cell)}
+                        </td>
+                      ))}
                     </tr>
-                  ) : (
-                    results.rows.map((row, rIdx) => (
-                      <tr
-                        key={rIdx}
-                        style={{
-                          borderBottom: rIdx < results.rows.length - 1 ? "1px solid #f1f5f9" : "none",
-                          backgroundColor: rIdx % 2 === 0 ? "#ffffff" : "#f8fafc",
-                        }}
-                      >
-                        {row.map((cell, cIdx) => (
-                          <td
-                            key={cIdx}
-                            style={{
-                              padding: "0.65rem 1rem",
-                              color: cell === null ? "#94a3b8" : "#334155",
-                              fontStyle: cell === null ? "italic" : "normal",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {cell === null ? "NULL" : String(cell)}
-                          </td>
-                        ))}
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -10,7 +10,7 @@ interface UploadedDataset {
 }
 
 interface DatasetUploadProps {
-  onUploadSuccess?: (datasetId: string) => void;
+  onUploadSuccess?: (datasetId: string, metadata?: { filename: string; rows: number; columns: number }) => void;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -89,7 +89,11 @@ export default function DatasetUpload({ onUploadSuccess }: DatasetUploadProps) {
 
       setUploadedDataset(data);
       if (onUploadSuccess) {
-        onUploadSuccess(data.dataset_id);
+        onUploadSuccess(data.dataset_id, {
+          filename: data.filename || file.name,
+          rows: data.rows || data.row_count || 0,
+          columns: data.columns || data.column_count || 0,
+        });
       }
       setFile(null);
       if (fileInputRef.current) {

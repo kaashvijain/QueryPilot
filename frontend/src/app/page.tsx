@@ -3,9 +3,11 @@
 import { useState } from "react";
 import DatasetUpload from "@/components/DatasetUpload";
 import DatasetSchema from "@/components/DatasetSchema";
+import QueryInput from "@/components/QueryInput";
 
 export default function Home() {
   const [activeDatasetId, setActiveDatasetId] = useState<string | null>(null);
+  const [queryResult, setQueryResult] = useState<any>(null);
 
   return (
     <div
@@ -106,9 +108,13 @@ export default function Home() {
             transition: "all 0.3s ease-in-out",
           }}
         >
-          {/* Left Column: Upload Section */}
-          <div style={{ width: "100%" }}>
+          {/* Left Column: Upload & Query Input */}
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
             <DatasetUpload onUploadSuccess={(id) => setActiveDatasetId(id)} />
+            <QueryInput
+              datasetId={activeDatasetId}
+              onQuerySuccess={(result) => setQueryResult(result)}
+            />
           </div>
 
           {/* Right Column: Schema Section */}

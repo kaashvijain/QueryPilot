@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from typing import Dict, Any, Optional, Type
 from pydantic import BaseModel, Field
 from config import get_settings
@@ -22,6 +23,7 @@ class LLMClient:
     Isolated LLM client for QueryPilot.
     Supports text generation and structured JSON outputs via Google Gemini API.
     Provider-specific SDK code is encapsulated strictly within this module.
+    Includes automatic retry for transient 503 / 429 API rate limits.
     """
 
     def __init__(self, api_key: Optional[str] = None, model_name: Optional[str] = None):
@@ -54,6 +56,7 @@ class LLMClient:
     ) -> LLMResponse:
         """
         Sends a prompt to the LLM and returns a structured LLMResponse.
+        Includes automatic retries for transient 503 high-demand spikes.
         Handles API errors gracefully without crashing the application.
         """
         if not self.api_key:
@@ -64,61 +67,76 @@ class LLMClient:
                 error_message="API Key is missing. Please configure GEMINI_API_KEY.",
             )
 
-        try:
-            from google.genai import types
+        max_retries = 3
+        last_exception = None
 
-            client = self._get_client()
+        for attempt in range(1, max_retries + 1):
+            try:
+                from google.genai import types
 
-            config_kwargs: Dict[str, Any] = {}
-            if system_instruction:
-                config_kwargs["system_instruction"] = system_instruction
+                client = self._get_client()
 
-            if response_schema:
-                config_kwargs["response_mime_type"] = "application/json"
-                config_kwargs["response_schema"] = response_schema
+                config_kwargs: Dict[str, Any] = {}
+                if system_instruction:
+                    config_kwargs["system_instruction"] = system_instruction
 
-            config = types.GenerateContentConfig(**config_kwargs) if config_kwargs else None
+                if response_schema:
+                    config_kwargs["response_mime_type"] = "application/json"
+                    config_kwargs["response_schema"] = response_schema
 
-            # Execute completion
-            raw_response = client.models.generate_content(
-                model=self.model_name,
-                contents=prompt,
-                config=config,
-            )
+                config = types.GenerateContentConfig(**config_kwargs) if config_kwargs else None
 
-            response_text = raw_response.text or ""
-            parsed_json = None
+                # Execute completion
+                raw_response = client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt,
+                    config=config,
+                )
 
-            # Attempt parsing structured JSON if requested or available
-            if response_schema or (response_text.strip().startswith("{") and response_text.strip().endswith("}")):
-                try:
-                    parsed_json = json.loads(response_text)
-                except Exception:
-                    parsed_json = None
+                response_text = raw_response.text or ""
+                parsed_json = None
 
-            # Extract token usage metadata if provided
-            tokens_used = {}
-            if hasattr(raw_response, "usage_metadata") and raw_response.usage_metadata:
-                meta = raw_response.usage_metadata
-                tokens_used = {
-                    "input_tokens": getattr(meta, "prompt_token_count", 0) or 0,
-                    "output_tokens": getattr(meta, "candidates_token_count", 0) or 0,
-                    "total_tokens": getattr(meta, "total_token_count", 0) or 0,
-                }
+                # Attempt parsing structured JSON if requested or available
+                if response_schema or (response_text.strip().startswith("{") and response_text.strip().endswith("}")):
+                    try:
+                        parsed_json = json.loads(response_text)
+                    except Exception:
+                        parsed_json = None
 
-            return LLMResponse(
-                text=response_text,
-                json_data=parsed_json,
-                model_name=self.model_name,
-                tokens_used=tokens_used,
-                success=True,
-            )
+                # Extract token usage metadata if provided
+                tokens_used = {}
+                if hasattr(raw_response, "usage_metadata") and raw_response.usage_metadata:
+                    meta = raw_response.usage_metadata
+                    tokens_used = {
+                        "input_tokens": getattr(meta, "prompt_token_count", 0) or 0,
+                        "output_tokens": getattr(meta, "candidates_token_count", 0) or 0,
+                        "total_tokens": getattr(meta, "total_token_count", 0) or 0,
+                    }
 
-        except Exception as exc:
-            logger.error(f"LLM API Call failed: {str(exc)}")
-            return LLMResponse(
-                text="",
-                model_name=self.model_name,
-                success=False,
-                error_message=f"LLM Provider Error: {str(exc)}",
-            )
+                return LLMResponse(
+                    text=response_text,
+                    json_data=parsed_json,
+                    model_name=self.model_name,
+                    tokens_used=tokens_used,
+                    success=True,
+                )
+
+            except Exception as exc:
+                last_exception = exc
+                err_str = str(exc)
+                if ("503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < max_retries:
+                    logger.warning(
+                        f"LLM API temporary busy error (attempt {attempt}/{max_retries}), retrying in 1.5s..."
+                    )
+                    time.sleep(1.5)
+                    continue
+                else:
+                    break
+
+        logger.error(f"LLM API Call failed: {str(last_exception)}")
+        return LLMResponse(
+            text="",
+            model_name=self.model_name,
+            success=False,
+            error_message=f"LLM Provider Error: {str(last_exception)}",
+        )

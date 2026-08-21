@@ -3,6 +3,7 @@ import io
 import os
 import uuid
 from fastapi import HTTPException, UploadFile
+from db import ingest_csv_to_duckdb
 
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads")
 
@@ -15,7 +16,7 @@ def ensure_upload_dir() -> str:
 
 async def process_and_save_csv(file: UploadFile) -> dict:
     """
-    Validates, parses, and saves an uploaded CSV file.
+    Validates, parses, saves an uploaded CSV file, and ingests it into DuckDB.
     
     Returns:
         dict containing dataset_id, filename, row_count, column_count.
@@ -101,18 +102,30 @@ async def process_and_save_csv(file: UploadFile) -> dict:
 
     row_count = len(non_empty_rows) - 1  # Exclude header row
 
-    # 5. Generate unique dataset ID and save to uploads folder
+    # 5. Save sanitized text to uploads folder normalized as UTF-8
     dataset_id = str(uuid.uuid4())
     upload_dir = ensure_upload_dir()
     file_path = os.path.join(upload_dir, f"{dataset_id}.csv")
 
     try:
-        with open(file_path, "wb") as f:
-            f.write(content_bytes)
+        with open(file_path, "w", encoding="utf-8", newline="") as f:
+            f.write(content_text)
     except Exception as exc:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to save uploaded dataset: {str(exc)}",
+        )
+
+    # 6. Ingest into DuckDB as an isolated table with inferred schema
+    try:
+        duckdb_info = ingest_csv_to_duckdb(dataset_id, file_path)
+        # Use DuckDB verified row count and column count
+        row_count = duckdb_info["row_count"]
+        column_count = len(duckdb_info["columns"])
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to ingest CSV into DuckDB: {str(exc)}",
         )
 
     return {

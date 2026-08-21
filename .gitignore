@@ -55,6 +55,8 @@ wheels/
 *.sqlite
 *.sqlite3
 
-# Uploaded Datasets
+# Uploaded Datasets & Database Files
 backend/uploads/*
 !backend/uploads/.gitkeep
+backend/data/*
+!backend/data/.gitkeep

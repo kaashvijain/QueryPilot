@@ -8,9 +8,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from services.sql_validator import validate_sql_query, SQLValidationResult
 
 
+@pytest.fixture
+def sample_schema():
+    return {
+        "dataset_id": "abc-123-uuid",
+        "table_name": "dataset_sales",
+        "row_count": 84392,
+        "columns": [
+            {"name": "product", "type": "VARCHAR"},
+            {"name": "quantity", "type": "INTEGER"},
+            {"name": "unit_price", "type": "DOUBLE"},
+            {"name": "order_date", "type": "DATE"},
+        ],
+    }
+
+
 def test_validate_valid_select():
-    """Test valid SELECT query passes validation."""
-    sql = 'SELECT "Product Name", SUM("Sales") AS "Total Revenue" FROM "dataset_sales" GROUP BY "Product Name" ORDER BY "Total Revenue" DESC LIMIT 5;'
+    """Test valid SELECT query passes validation without schema."""
+    sql = 'SELECT "product", SUM("quantity") AS "total" FROM "dataset_sales" GROUP BY "product";'
     res = validate_sql_query(sql)
 
     assert res.valid is True
@@ -19,7 +34,7 @@ def test_validate_valid_select():
 
 def test_validate_valid_with_cte():
     """Test valid WITH CTE query passes validation."""
-    sql = 'WITH top_products AS (SELECT product, SUM(sales) as total FROM sales GROUP BY product) SELECT * FROM top_products LIMIT 10'
+    sql = 'WITH top_products AS (SELECT product, SUM(quantity) as total FROM sales GROUP BY product) SELECT * FROM top_products LIMIT 10'
     res = validate_sql_query(sql)
 
     assert res.valid is True
@@ -99,7 +114,7 @@ def test_validate_reject_multiple_statements():
 
 
 def test_validate_string_literal_with_forbidden_word():
-    """Test string literals matching forbidden words (e.g. category = 'DROP') do not cause false positives."""
+    """Test string literals matching forbidden words do not cause false positives."""
     sql = "SELECT * FROM dataset_sales WHERE category = 'DROP' OR action = 'DELETE'"
     res = validate_sql_query(sql)
 
@@ -112,3 +127,39 @@ def test_validate_empty_sql():
     assert validate_sql_query("").valid is False
     assert validate_sql_query("   ").valid is False
     assert validate_sql_query("-- only comments\n").valid is False
+
+
+def test_validate_with_schema_valid(sample_schema):
+    """Test valid query matching table and column schema passes validation."""
+    sql = 'SELECT product, SUM(quantity * unit_price) AS revenue FROM dataset_sales GROUP BY product ORDER BY revenue DESC LIMIT 5;'
+    res = validate_sql_query(sql, schema_info=sample_schema)
+
+    assert res.valid is True
+    assert res.reason is None
+
+
+def test_validate_with_schema_invalid_table(sample_schema):
+    """Test rejecting query referencing a nonexistent table name."""
+    sql = 'SELECT product FROM nonexistent_table'
+    res = validate_sql_query(sql, schema_info=sample_schema)
+
+    assert res.valid is False
+    assert "Referenced table 'nonexistent_table' does not exist in schema" in res.reason
+
+
+def test_validate_with_schema_invalid_column_unquoted(sample_schema):
+    """Test rejecting query referencing a nonexistent unquoted column."""
+    sql = 'SELECT product, nonexistent_column FROM dataset_sales'
+    res = validate_sql_query(sql, schema_info=sample_schema)
+
+    assert res.valid is False
+    assert "Referenced column 'nonexistent_column' does not exist in schema" in res.reason
+
+
+def test_validate_with_schema_invalid_column_quoted(sample_schema):
+    """Test rejecting query referencing a nonexistent double-quoted column."""
+    sql = 'SELECT "product", "Invalid Column" FROM "dataset_sales"'
+    res = validate_sql_query(sql, schema_info=sample_schema)
+
+    assert res.valid is False
+    assert "Referenced column 'Invalid Column' does not exist in schema" in res.reason

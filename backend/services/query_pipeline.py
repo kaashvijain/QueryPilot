@@ -27,6 +27,7 @@ class QueryPipelineResult(BaseModel):
     question: str
     sql: str = Field(default="", description="Final generated or corrected SQL query")
     explanation: str = Field(default="", description="Plain-English explanation of the calculation")
+    insight: str = Field(default="", description="Data-grounded natural language insight")
     chart_type: str = Field(default="table", description="Recommended visualization chart type")
     results: Optional[QueryResultsSchema] = Field(default=None, description="Executed query results if successful")
     attempts: int = Field(default=1, description="Number of attempts executed (maximum 3)")
@@ -175,6 +176,7 @@ def run_query_pipeline(
                 question=question,
                 sql=current_sql,
                 explanation=final_explanation,
+                insight=final_explanation,
                 chart_type=deterministic_chart_type,
                 results=QueryResultsSchema(
                     columns=exec_res.columns,

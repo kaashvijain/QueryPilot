@@ -1,7 +1,7 @@
 from typing import List, Any, Optional
 from fastapi import FastAPI, Depends, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from config import get_settings, Settings
 from services.dataset_service import process_and_save_csv
 from services.query_pipeline import run_query_pipeline, QueryPipelineResult, QueryResultsSchema
@@ -59,6 +59,7 @@ class QueryResponse(BaseModel):
     question: str
     sql: str
     explanation: str
+    insight: str = Field(default="", description="Data-grounded natural language insight")
     chart: ChartMetadata
     chart_type: str  # Kept for backward compatibility
     attempts: int
@@ -126,6 +127,7 @@ def analyze_dataset_query(payload: QueryRequest):
         question=pipeline_res.question,
         sql=pipeline_res.sql,
         explanation=pipeline_res.explanation,
+        insight=pipeline_res.insight or pipeline_res.explanation,
         chart=ChartMetadata(type=pipeline_res.chart_type),
         chart_type=pipeline_res.chart_type,
         attempts=pipeline_res.attempts,

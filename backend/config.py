@@ -20,7 +20,6 @@ class Settings(BaseSettings):
     )
 
 
-@lru_cache
 def get_settings() -> Settings:
-    """Returns a cached instance of application settings."""
+    """Returns an instance of application settings loaded from .env."""
     return Settings()

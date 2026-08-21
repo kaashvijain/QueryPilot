@@ -4,7 +4,11 @@ import React, { useState } from "react";
 
 interface QueryInputProps {
   datasetId: string | null;
+  activeQuestion?: string;
+  isCollapsed?: boolean;
   onQuerySuccess?: (queryResult: any) => void;
+  onEditQuestion?: (questionText: string) => void;
+  onNewQuery?: () => void;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -17,11 +21,25 @@ const SUGGESTED_QUESTIONS = [
   { label: "Lowest Performing", question: "Which 5 products have the lowest sales volume?" },
 ];
 
-export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProps) {
-  const [question, setQuestion] = useState("");
+export default function QueryInput({
+  datasetId,
+  activeQuestion = "",
+  isCollapsed = false,
+  onQuerySuccess,
+  onEditQuestion,
+  onNewQuery,
+}: QueryInputProps) {
+  const [question, setQuestion] = useState(activeQuestion);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [loadingStep, setLoadingStep] = useState<string>("Analyzing question...");
+  const [loadingStepIdx, setLoadingStepIdx] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Synchronize initial question if prefilled from Edit Question
+  React.useEffect(() => {
+    if (activeQuestion) {
+      setQuestion(activeQuestion);
+    }
+  }, [activeQuestion]);
 
   const handleAnalyze = async (overrideQuestion?: string) => {
     const qToRun = (overrideQuestion || question).trim();
@@ -36,12 +54,12 @@ export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProp
     }
 
     setIsProcessing(true);
-    setLoadingStep("Understanding question...");
+    setLoadingStepIdx(0);
     setError(null);
 
-    const stepTimer1 = setTimeout(() => setLoadingStep("Generating schema-aware SQL..."), 800);
-    const stepTimer2 = setTimeout(() => setLoadingStep("Executing DuckDB query..."), 1600);
-    const stepTimer3 = setTimeout(() => setLoadingStep("Formatting visualization & insight..."), 2400);
+    const step1 = setTimeout(() => setLoadingStepIdx(1), 600);
+    const step2 = setTimeout(() => setLoadingStepIdx(2), 1400);
+    const step3 = setTimeout(() => setLoadingStepIdx(3), 2200);
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/query`, {
@@ -65,9 +83,9 @@ export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProp
     } catch (err: any) {
       setError(err.message || "An error occurred while executing your query.");
     } finally {
-      clearTimeout(stepTimer1);
-      clearTimeout(stepTimer2);
-      clearTimeout(stepTimer3);
+      clearTimeout(step1);
+      clearTimeout(step2);
+      clearTimeout(step3);
       setIsProcessing(false);
     }
   };
@@ -81,16 +99,90 @@ export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProp
     }
   };
 
+  // State 2: Collapsed Context Bar (Post-Analysis State)
+  if (isCollapsed && !isProcessing) {
+    return (
+      <div
+        className="workspace-fade-in"
+        style={{
+          width: "100%",
+          padding: "0.85rem 1.25rem",
+          backgroundColor: "var(--bg-secondary)",
+          borderRadius: "var(--radius-md)",
+          border: "1px solid var(--border-subtle)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "0.75rem",
+          marginBottom: "1.5rem",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flex: "1 1 300px" }}>
+          <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", fontWeight: 500 }}>
+            Question:
+          </span>
+          <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--text-primary)" }}>
+            "{activeQuestion || question}"
+          </span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <button
+            type="button"
+            onClick={() => onEditQuestion && onEditQuestion(activeQuestion || question)}
+            style={{
+              padding: "0.35rem 0.75rem",
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              color: "var(--text-primary)",
+              backgroundColor: "var(--bg-primary)",
+              border: "1px solid var(--border-medium)",
+              borderRadius: "var(--radius-sm)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.3rem",
+            }}
+          >
+            Edit question
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setQuestion("");
+              if (onNewQuery) onNewQuery();
+            }}
+            style={{
+              padding: "0.35rem 0.75rem",
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              color: "#ffffff",
+              backgroundColor: "var(--accent-primary)",
+              border: "none",
+              borderRadius: "var(--radius-sm)",
+              cursor: "pointer",
+            }}
+          >
+            New query
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // State 1: Active Hero Query Input State (Before Analysis / Editing Query)
   return (
-    <div style={{ width: "100%", textAlign: "left", marginBottom: "2rem" }}>
+    <div className="workspace-fade-in" style={{ width: "100%", textAlign: "left", marginBottom: "2rem" }}>
       {/* Hero Heading & Subtitle */}
       <div style={{ marginBottom: "1.25rem" }}>
         <h2
           style={{
             fontSize: "1.5rem",
-            fontWeight: 800,
+            fontWeight: 700,
             color: "var(--text-primary)",
-            letterSpacing: "-0.02em",
+            letterSpacing: "-0.01em",
             marginBottom: "0.35rem",
           }}
         >
@@ -109,7 +201,7 @@ export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProp
           borderRadius: "var(--radius-md)",
           border: "1px solid var(--border-medium)",
           padding: "1rem 1.25rem",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
         }}
       >
         <div style={{ position: "relative" }}>
@@ -129,7 +221,7 @@ export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProp
             rows={3}
             style={{
               width: "100%",
-              padding: "0.5rem 0.25rem 2rem 0.25rem",
+              padding: "0.25rem 0.25rem 2rem 0.25rem",
               fontSize: "1rem",
               color: "var(--text-primary)",
               backgroundColor: "transparent",
@@ -141,7 +233,7 @@ export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProp
             }}
           />
 
-          {/* Bottom Bar inside Input Box */}
+          {/* Bottom Control Bar inside Textarea Container */}
           <div
             style={{
               display: "flex",
@@ -175,65 +267,44 @@ export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProp
                 transition: "background-color 0.15s ease",
               }}
             >
-              {isProcessing ? (
-                <>
-                  <span
-                    style={{
-                      width: "14px",
-                      height: "14px",
-                      border: "2px solid #ffffff",
-                      borderTop: "2px solid transparent",
-                      borderRadius: "50%",
-                      animation: "spin 0.8s linear infinite",
-                    }}
-                  />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  Analyze
-                  <svg style={{ width: "16px", height: "16px" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </>
-              )}
+              {isProcessing ? "Analyzing..." : "Analyze"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Animated Multi-step Loading State */}
+      {/* Multi-step Checklist Loading State */}
       {isProcessing && (
         <div
           style={{
-            marginTop: "1rem",
-            padding: "0.85rem 1rem",
+            marginTop: "1.25rem",
+            padding: "1rem 1.25rem",
             backgroundColor: "var(--bg-secondary)",
             borderRadius: "var(--radius-md)",
             border: "1px solid var(--border-subtle)",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.75rem",
-            fontSize: "0.85rem",
-            color: "var(--text-secondary)",
           }}
         >
-          <span
-            style={{
-              width: "14px",
-              height: "14px",
-              border: "2px solid var(--accent-blue)",
-              borderTop: "2px solid transparent",
-              borderRadius: "50%",
-              animation: "spin 0.8s linear infinite",
-              flexShrink: 0,
-            }}
-          />
-          <span>{loadingStep}</span>
+          <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+            Analyzing your data
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.825rem" }}>
+            <div style={{ color: loadingStepIdx >= 0 ? "var(--success-green)" : "var(--text-muted)" }}>
+              {loadingStepIdx > 0 ? "✓" : "●"} Understanding your question
+            </div>
+            <div style={{ color: loadingStepIdx >= 1 ? (loadingStepIdx > 1 ? "var(--success-green)" : "var(--text-primary)") : "var(--text-muted)" }}>
+              {loadingStepIdx > 1 ? "✓" : loadingStepIdx === 1 ? "●" : "○"} Generating schema-aware SQL
+            </div>
+            <div style={{ color: loadingStepIdx >= 2 ? (loadingStepIdx > 2 ? "var(--success-green)" : "var(--text-primary)") : "var(--text-muted)" }}>
+              {loadingStepIdx > 2 ? "✓" : loadingStepIdx === 2 ? "●" : "○"} Running DuckDB query
+            </div>
+            <div style={{ color: loadingStepIdx >= 3 ? "var(--text-primary)" : "var(--text-muted)" }}>
+              {loadingStepIdx === 3 ? "●" : "○"} Preparing insights & chart
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Error Message */}
+      {/* Error State */}
       {error && (
         <div
           style={{
@@ -255,15 +326,13 @@ export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProp
         <div style={{ marginTop: "1.5rem" }}>
           <div
             style={{
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              color: "var(--text-muted)",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              color: "var(--text-secondary)",
               marginBottom: "0.6rem",
             }}
           >
-            Try asking...
+            Try asking
           </div>
 
           <div className="horizontal-scroll-container">
@@ -277,7 +346,7 @@ export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProp
                   handleAnalyze(item.question);
                 }}
                 style={{
-                  width: "220px",
+                  width: "230px",
                   padding: "0.85rem 1rem",
                   backgroundColor: "var(--bg-primary)",
                   border: "1px solid var(--border-subtle)",
@@ -296,7 +365,7 @@ export default function QueryInput({ datasetId, onQuerySuccess }: QueryInputProp
                 <p style={{ fontSize: "0.825rem", color: "var(--text-primary)", fontWeight: 500, lineHeight: 1.35 }}>
                   {item.question}
                 </p>
-                <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", alignSelf: "flex-end" }}>
+                <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", alignSelf: "flex-end", fontWeight: 600 }}>
                   Run →
                 </span>
               </div>

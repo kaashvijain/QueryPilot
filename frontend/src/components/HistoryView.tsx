@@ -104,7 +104,7 @@ export default function HistoryView({ activeDatasetId, onSelectQuery, onRerunQue
         }}
       >
         <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.5rem" }}>
-          No Analysis History Yet
+          No analysis history yet
         </h3>
         <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", maxWidth: "400px", margin: "0 auto" }}>
           Questions you analyze will be automatically saved here for quick reference and rerunning.
@@ -125,11 +125,11 @@ export default function HistoryView({ activeDatasetId, onSelectQuery, onRerunQue
         }}
       >
         <div>
-          <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-primary)" }}>
-            Analysis History
+          <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text-primary)" }}>
+            Analysis history
           </h2>
           <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-            {history.length} saved query {history.length === 1 ? "result" : "results"} stored locally
+            {history.length} saved {history.length === 1 ? "query" : "queries"} stored locally
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export default function HistoryView({ activeDatasetId, onSelectQuery, onRerunQue
             cursor: "pointer",
           }}
         >
-          Clear History
+          Clear history
         </button>
       </div>
 
@@ -173,15 +173,13 @@ export default function HistoryView({ activeDatasetId, onSelectQuery, onRerunQue
       <div style={{ marginBottom: "2rem" }}>
         <div
           style={{
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            color: "var(--text-muted)",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
+            fontSize: "0.8rem",
+            fontWeight: 600,
+            color: "var(--text-secondary)",
             marginBottom: "0.6rem",
           }}
         >
-          Recent Queries
+          Recent queries
         </div>
 
         <div className="horizontal-scroll-container">
@@ -209,7 +207,7 @@ export default function HistoryView({ activeDatasetId, onSelectQuery, onRerunQue
                 </span>
                 <p
                   style={{
-                    fontSize: "0.9rem",
+                    fontSize: "0.875rem",
                     fontWeight: 600,
                     color: "var(--text-primary)",
                     marginTop: "0.25rem",
@@ -255,13 +253,13 @@ export default function HistoryView({ activeDatasetId, onSelectQuery, onRerunQue
           >
             <div style={{ flex: "1 1 300px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-                <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--text-primary)" }}>
                   {item.question}
                 </span>
                 <span
                   style={{
                     fontSize: "0.7rem",
-                    color: "var(--text-muted)",
+                    color: "var(--text-secondary)",
                     backgroundColor: "var(--bg-secondary)",
                     padding: "0.1rem 0.4rem",
                     borderRadius: "4px",

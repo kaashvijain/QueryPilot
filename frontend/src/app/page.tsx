@@ -25,6 +25,8 @@ function MainDashboardContent() {
   const [activeView, setActiveView] = useState<ViewTab>(currentViewParam);
   const [activeDataset, setActiveDataset] = useState<DatasetMetadata | null>(null);
   const [queryResult, setQueryResult] = useState<any>(null);
+  const [activeQuestionText, setActiveQuestionText] = useState<string>("");
+  const [isQueryCollapsed, setIsQueryCollapsed] = useState<boolean>(false);
 
   useEffect(() => {
     const view = searchParams.get("view") as ViewTab;
@@ -47,10 +49,14 @@ function MainDashboardContent() {
     };
     setActiveDataset(dsMeta);
     setQueryResult(null);
+    setIsQueryCollapsed(false);
+    setActiveQuestionText("");
   };
 
   const handleQuerySuccess = (result: any) => {
     setQueryResult(result);
+    setActiveQuestionText(result.question || "");
+    setIsQueryCollapsed(true); // Collapse query input into top context header post-analysis
 
     if (result && result.question && result.sql && activeDataset) {
       saveToHistory({
@@ -65,6 +71,17 @@ function MainDashboardContent() {
         previewRows: result.results?.rows ? result.results.rows.slice(0, 5) : [],
       });
     }
+  };
+
+  const handleEditQuestion = (qText: string) => {
+    setActiveQuestionText(qText);
+    setIsQueryCollapsed(false);
+  };
+
+  const handleNewQuery = () => {
+    setQueryResult(null);
+    setActiveQuestionText("");
+    setIsQueryCollapsed(false);
   };
 
   const handleSelectHistoryItem = (item: HistoryItem) => {
@@ -84,6 +101,8 @@ function MainDashboardContent() {
       chart_type: item.chartType,
       success: true,
     });
+    setActiveQuestionText(item.question);
+    setIsQueryCollapsed(true);
     handleSelectView("analyze");
   };
 
@@ -103,10 +122,10 @@ function MainDashboardContent() {
         dataset={activeDataset}
       />
 
-      {/* Main Container */}
+      {/* Main Workspace Container */}
       <main
         style={{
-          maxWidth: "1200px",
+          maxWidth: "1100px",
           margin: "0 auto",
           padding: "2rem 1.5rem 4rem",
         }}
@@ -130,12 +149,22 @@ function MainDashboardContent() {
               <div>
                 <DatasetBanner
                   dataset={activeDataset}
-                  onChangeDataset={() => setActiveDataset(null)}
+                  onChangeDataset={() => {
+                    setActiveDataset(null);
+                    setQueryResult(null);
+                    setIsQueryCollapsed(false);
+                  }}
                 />
+
                 <QueryInput
                   datasetId={activeDataset.dataset_id}
+                  activeQuestion={activeQuestionText}
+                  isCollapsed={isQueryCollapsed}
                   onQuerySuccess={handleQuerySuccess}
+                  onEditQuestion={handleEditQuestion}
+                  onNewQuery={handleNewQuery}
                 />
+
                 {queryResult && <QueryResult result={queryResult} />}
               </div>
             )}
@@ -148,6 +177,8 @@ function MainDashboardContent() {
             activeDatasetId={activeDataset?.dataset_id || null}
             onSelectQuery={handleSelectHistoryItem}
             onRerunQuery={(q) => {
+              setActiveQuestionText(q);
+              setIsQueryCollapsed(false);
               handleSelectView("analyze");
             }}
           />
@@ -167,7 +198,7 @@ function MainDashboardContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center" }}>Loading QueryPilot...</div>}>
+    <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>Loading QueryPilot...</div>}>
       <MainDashboardContent />
     </Suspense>
   );

@@ -66,7 +66,7 @@ export default function DatasetView({ dataset, onUploadClick }: DatasetViewProps
         }}
       >
         <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.5rem" }}>
-          No Active Dataset Loaded
+          No active dataset
         </h3>
         <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", maxWidth: "400px", margin: "0 auto 1.5rem" }}>
           Upload a CSV dataset to inspect column data types, table structures, and preview sample records.
@@ -85,7 +85,7 @@ export default function DatasetView({ dataset, onUploadClick }: DatasetViewProps
             cursor: "pointer",
           }}
         >
-          Upload CSV Dataset
+          Upload CSV dataset
         </button>
       </div>
     );
@@ -105,45 +105,45 @@ export default function DatasetView({ dataset, onUploadClick }: DatasetViewProps
         }}
       >
         <div>
-          <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-primary)" }}>
+          <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--text-primary)" }}>
             {dataset.filename}
           </h2>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.1rem" }}>
-            Dataset ID: <code style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{dataset.dataset_id}</code>
+          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.15rem" }}>
+            {dataset.rows.toLocaleString()} rows · {dataset.columns} columns
           </p>
         </div>
 
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <div
             style={{
-              padding: "0.5rem 1rem",
+              padding: "0.4rem 0.85rem",
               backgroundColor: "var(--bg-secondary)",
               border: "1px solid var(--border-subtle)",
               borderRadius: "var(--radius-sm)",
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>
-              Total Rows
+            <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+              Rows
             </div>
-            <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)" }}>
               {dataset.rows.toLocaleString()}
             </div>
           </div>
 
           <div
             style={{
-              padding: "0.5rem 1rem",
+              padding: "0.4rem 0.85rem",
               backgroundColor: "var(--bg-secondary)",
               border: "1px solid var(--border-subtle)",
               borderRadius: "var(--radius-sm)",
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>
-              Total Columns
+            <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+              Columns
             </div>
-            <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+            <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)" }}>
               {dataset.columns}
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function DatasetView({ dataset, onUploadClick }: DatasetViewProps
           style={{
             padding: "0.5rem 0.25rem",
             fontSize: "0.9rem",
-            fontWeight: activeTab === "schema" ? 700 : 500,
+            fontWeight: activeTab === "schema" ? 600 : 500,
             color: activeTab === "schema" ? "var(--text-primary)" : "var(--text-secondary)",
             borderBottom: activeTab === "schema" ? "2px solid var(--accent-primary)" : "2px solid transparent",
             backgroundColor: "transparent",
@@ -175,7 +175,7 @@ export default function DatasetView({ dataset, onUploadClick }: DatasetViewProps
             cursor: "pointer",
           }}
         >
-          Schema Inspector
+          Schema inspector
         </button>
 
         <button
@@ -184,7 +184,7 @@ export default function DatasetView({ dataset, onUploadClick }: DatasetViewProps
           style={{
             padding: "0.5rem 0.25rem",
             fontSize: "0.9rem",
-            fontWeight: activeTab === "preview" ? 700 : 500,
+            fontWeight: activeTab === "preview" ? 600 : 500,
             color: activeTab === "preview" ? "var(--text-primary)" : "var(--text-secondary)",
             borderBottom: activeTab === "preview" ? "2px solid var(--accent-primary)" : "2px solid transparent",
             backgroundColor: "transparent",
@@ -194,7 +194,7 @@ export default function DatasetView({ dataset, onUploadClick }: DatasetViewProps
             cursor: "pointer",
           }}
         >
-          Data Sample Preview (First 20 Rows)
+          Data sample preview
         </button>
       </div>
 
@@ -217,15 +217,15 @@ export default function DatasetView({ dataset, onUploadClick }: DatasetViewProps
                 overflowY: "auto",
               }}
             >
-              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.85rem" }}>
                 <thead>
                   <tr style={{ backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-subtle)" }}>
                     {previewData.columns.map((col, idx) => (
                       <th
                         key={idx}
                         style={{
-                          padding: "0.75rem 1rem",
-                          fontWeight: 700,
+                          padding: "0.65rem 0.85rem",
+                          fontWeight: 600,
                           color: "var(--text-primary)",
                           whiteSpace: "nowrap",
                           position: "sticky",
@@ -251,7 +251,7 @@ export default function DatasetView({ dataset, onUploadClick }: DatasetViewProps
                         <td
                           key={cIdx}
                           style={{
-                            padding: "0.65rem 1rem",
+                            padding: "0.6rem 0.85rem",
                             color: cell === null ? "var(--text-muted)" : "var(--text-primary)",
                             fontStyle: cell === null ? "italic" : "normal",
                             whiteSpace: "nowrap",

@@ -125,18 +125,26 @@ class LLMClient:
                 last_exception = exc
                 err_str = str(exc)
                 if ("503" in err_str or "UNAVAILABLE" in err_str or "429" in err_str or "RESOURCE_EXHAUSTED" in err_str) and attempt < max_retries:
+                    retry_delay = attempt * 2.0
                     logger.warning(
-                        f"LLM API temporary busy error (attempt {attempt}/{max_retries}), retrying in 1.5s..."
+                        f"LLM API rate limit or transient error (attempt {attempt}/{max_retries}), retrying in {retry_delay}s..."
                     )
-                    time.sleep(1.5)
+                    time.sleep(retry_delay)
                     continue
                 else:
                     break
 
-        logger.error(f"LLM API Call failed: {str(last_exception)}")
+        raw_err_msg = str(last_exception) if last_exception else "Unknown error"
+        if "429" in raw_err_msg or "RESOURCE_EXHAUSTED" in raw_err_msg or "Quota exceeded" in raw_err_msg:
+            user_friendly_msg = "Gemini API rate limit or quota exceeded (429 RESOURCE_EXHAUSTED). Please wait a minute before retrying, or check your API key quota."
+        else:
+            # Clean raw dict dumps if present
+            user_friendly_msg = raw_err_msg.split("\n")[0] if "\n" in raw_err_msg else raw_err_msg
+
+        logger.error(f"LLM API Call failed: {user_friendly_msg}")
         return LLMResponse(
             text="",
             model_name=self.model_name,
             success=False,
-            error_message=f"LLM Provider Error: {str(last_exception)}",
+            error_message=f"LLM Provider Error: {user_friendly_msg}",
         )

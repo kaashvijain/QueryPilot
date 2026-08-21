@@ -1,3 +1,5 @@
+import DatasetUpload from "@/components/DatasetUpload";
+
 export default function Home() {
   return (
     <main
@@ -5,33 +7,24 @@ export default function Home() {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#ffffff",
         color: "#111111",
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        padding: "2rem",
-        textAlign: "center",
+        padding: "3rem 1.5rem",
       }}
     >
-      <h1 style={{ fontSize: "2.5rem", fontWeight: 700, marginBottom: "1rem" }}>
-        QueryPilot
-      </h1>
-      <p style={{ fontSize: "1.2rem", color: "#444444", maxWidth: "600px" }}>
-        AI-Powered Natural Language Analytics Platform
-      </p>
-      <div
-        style={{
-          marginTop: "2rem",
-          padding: "1rem 1.5rem",
-          border: "1px solid #e0e0e0",
-          borderRadius: "8px",
-          backgroundColor: "#f9f9f9",
-          color: "#333333",
-          fontSize: "0.95rem",
-        }}
-      >
-        Frontend & Backend monorepo structure initialized successfully.
+      <div style={{ maxWidth: "800px", width: "100%", textAlign: "center", marginBottom: "2.5rem" }}>
+        <h1 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#0f172a", marginBottom: "0.5rem" }}>
+          QueryPilot
+        </h1>
+        <p style={{ fontSize: "1.1rem", color: "#475569" }}>
+          AI-Powered Natural Language Analytics Platform
+        </p>
+      </div>
+
+      <div style={{ width: "100%", maxWidth: "600px" }}>
+        <DatasetUpload />
       </div>
     </main>
   );

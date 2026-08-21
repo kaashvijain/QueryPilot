@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Optional
 from fastapi import FastAPI, Depends, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -50,12 +50,17 @@ class QueryRequest(BaseModel):
     question: str
 
 
+class ChartMetadata(BaseModel):
+    type: str  # bar, line, scatter, pie, kpi, table
+
+
 class QueryResponse(BaseModel):
     dataset_id: str
     question: str
     sql: str
     explanation: str
-    chart_type: str
+    chart: ChartMetadata
+    chart_type: str  # Kept for backward compatibility
     attempts: int
     results: QueryResultsSchema
 
@@ -101,8 +106,9 @@ def get_dataset_schema_endpoint(dataset_id: str):
 @app.post("/api/query", response_model=QueryResponse)
 def analyze_dataset_query(payload: QueryRequest):
     """
-    Translates a natural language question into SQL, validates, executes against DuckDB,
-    and automatically self-corrects on database errors up to 3 attempts.
+    Main QueryPilot natural language analytics endpoint.
+    Orchestrates schema retrieval, prompt formatting, SQL generation, validation,
+    DuckDB query execution, and automatic self-correction (up to 3 attempts).
     """
     pipeline_res: QueryPipelineResult = run_query_pipeline(
         dataset_id=payload.dataset_id,
@@ -120,6 +126,7 @@ def analyze_dataset_query(payload: QueryRequest):
         question=pipeline_res.question,
         sql=pipeline_res.sql,
         explanation=pipeline_res.explanation,
+        chart=ChartMetadata(type=pipeline_res.chart_type),
         chart_type=pipeline_res.chart_type,
         attempts=pipeline_res.attempts,
         results=pipeline_res.results,

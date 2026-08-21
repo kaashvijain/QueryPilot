@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Any
 from fastapi import FastAPI, Depends, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from config import get_settings, Settings
 from services.dataset_service import process_and_save_csv
 from services.sql_generator import generate_sql_from_question, SQLGenerationResult
+from services.query_executor import execute_query, SQLExecutionResult
 from db import get_dataset_full_schema
 
 settings = get_settings()
@@ -50,12 +51,20 @@ class QueryRequest(BaseModel):
     question: str
 
 
+class QueryResultsSchema(BaseModel):
+    columns: List[str]
+    rows: List[List[Any]]
+    row_count: int
+    execution_time_ms: float
+
+
 class QueryResponse(BaseModel):
     dataset_id: str
     question: str
     sql: str
     explanation: str
     chart_type: str
+    results: QueryResultsSchema
 
 
 @app.get("/")
@@ -99,21 +108,41 @@ def get_dataset_schema_endpoint(dataset_id: str):
 @app.post("/api/query", response_model=QueryResponse)
 def analyze_dataset_query(payload: QueryRequest):
     """
-    Translates a natural language question into schema-aware SQL, explanation, and chart recommendation.
+    Translates a natural language question into schema-aware SQL, validates it,
+    executes it against DuckDB, and returns SQL, explanation, chart recommendation, and execution results.
     """
     schema_info = get_dataset_full_schema(payload.dataset_id)
-    result: SQLGenerationResult = generate_sql_from_question(payload.question, schema_info)
     
-    if not result.success:
+    # 1. Translate NL Question -> Schema-Aware SQL
+    gen_result: SQLGenerationResult = generate_sql_from_question(payload.question, schema_info)
+    if not gen_result.success:
         raise HTTPException(
             status_code=400,
-            detail=result.error_message or "Failed to generate SQL for the provided question.",
+            detail=gen_result.error_message or "Failed to generate SQL for the provided question.",
+        )
+
+    # 2. Validate & Execute SQL against DuckDB
+    exec_result: SQLExecutionResult = execute_query(
+        dataset_id=payload.dataset_id,
+        sql=gen_result.sql,
+        schema_info=schema_info,
+    )
+    if not exec_result.success:
+        raise HTTPException(
+            status_code=400,
+            detail=exec_result.error_message or "Failed to execute generated SQL against dataset.",
         )
 
     return QueryResponse(
         dataset_id=payload.dataset_id,
         question=payload.question,
-        sql=result.sql,
-        explanation=result.explanation,
-        chart_type=result.chart_type,
+        sql=gen_result.sql,
+        explanation=gen_result.explanation,
+        chart_type=gen_result.chart_type,
+        results=QueryResultsSchema(
+            columns=exec_result.columns,
+            rows=exec_result.rows,
+            row_count=exec_result.row_count,
+            execution_time_ms=exec_result.execution_time_ms,
+        ),
     )

@@ -182,16 +182,24 @@ def test_generate_sql_empty_question(sample_schema):
 
 
 def test_api_query_endpoint():
-    """Test POST /api/query endpoint with uploaded CSV dataset."""
+    """Test POST /api/query endpoint end-to-end integration with uploaded CSV dataset."""
     csv_content = "product,sales\nLaptop,1000\nMonitor,500\n"
     files = {"file": ("test.csv", csv_content, "text/csv")}
     upload_res = client.post("/api/dataset", files=files)
     assert upload_res.status_code == 201
     dataset_id = upload_res.json()["dataset_id"]
 
+    # Retrieve table name created by DuckDB ingestion
+    schema_res = client.get(f"/api/dataset/{dataset_id}/schema")
+    table_name = schema_res.json()["table_name"]
+
     mock_llm_response = LLMResponse(
-        text='{"sql": "SELECT product, SUM(sales) FROM dataset", "explanation": "Test", "chart_type": "bar"}',
-        json_data={"sql": "SELECT product, SUM(sales) FROM dataset", "explanation": "Test", "chart_type": "bar"},
+        text=f'{{"sql": "SELECT product, SUM(sales) AS total_sales FROM \\"{table_name}\\" GROUP BY product ORDER BY total_sales DESC", "explanation": "Test calculation.", "chart_type": "bar"}}',
+        json_data={
+            "sql": f'SELECT product, SUM(sales) AS total_sales FROM "{table_name}" GROUP BY product ORDER BY total_sales DESC',
+            "explanation": "Test calculation.",
+            "chart_type": "bar",
+        },
         model_name="gemini-3.6-flash",
         success=True,
     )
@@ -207,6 +215,10 @@ def test_api_query_endpoint():
         assert query_res.status_code == 200
         data = query_res.json()
         assert data["dataset_id"] == dataset_id
-        assert data["sql"] == "SELECT product, SUM(sales) FROM dataset"
-        assert data["explanation"] == "Test"
+        assert data["explanation"] == "Test calculation."
         assert data["chart_type"] == "bar"
+        assert "results" in data
+        assert data["results"]["columns"] == ["product", "total_sales"]
+        assert data["results"]["row_count"] == 2
+        assert len(data["results"]["rows"]) == 2
+        assert data["results"]["execution_time_ms"] >= 0.0
